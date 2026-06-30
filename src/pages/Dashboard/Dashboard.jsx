@@ -167,7 +167,7 @@ function MemberDashboard() {
             <h2>Recommended for You</h2>
           </div>
           <div className={styles['rec-grid']}>
-            {recommendations.slice(0, 6).map(book => (
+            {recommendations.slice(0, 14).map(book => (
               <div
                 key={book.id}
                 className={styles['rec-card']}

@@ -1,5 +1,7 @@
 .dashboard {
   max-width: var(--max-content-width);
+  width: 100%;
+  margin: 0 auto;
   animation: fadeIn var(--duration-slow) var(--ease-out);
 }
 

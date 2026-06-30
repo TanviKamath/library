@@ -115,11 +115,11 @@ def get_recommendations():
         
     # Sort candidates by final score descending
     sorted_candidates = sorted(all_candidates_dict.values(), key=lambda b: final_scores[b.id], reverse=True)
-    recommended_books = sorted_candidates[:10]
+    recommended_books = sorted_candidates[:16]
 
     # 6. Pad if necessary
-    if len(recommended_books) < 10:
-        needed = 10 - len(recommended_books)
+    if len(recommended_books) < 16:
+        needed = 16 - len(recommended_books)
         exclude_ids = history_book_ids + [b.id for b in recommended_books]
         
         pad_query = Book.query
