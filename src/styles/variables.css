@@ -1,0 +1,141 @@
+/* ============================================
+   Brew & Borrow — Design Tokens
+   ============================================ */
+
+:root {
+  /* ── Palette (Amber Scale) ── */
+  --color-cream:          #fffbeb;
+  --color-cream-light:    #ffffff;
+  --color-cream-dark:     #fef3c7;
+  --color-ivory:          #ffffff;
+
+  --color-espresso:       #451a03;
+  --color-charcoal:       #78350f;
+  --color-charcoal-light: #92400e;
+
+  --color-terracotta:     oklch(0.31 0.075 46.734);
+  --color-terracotta-dark:oklch(0.26 0.075 46.734);
+  --color-terracotta-light:oklch(0.38 0.075 46.734);
+  --color-terracotta-bg:  oklch(0.31 0.075 46.734 / 0.12);
+  --color-terracotta-bg-hover: oklch(0.31 0.075 46.734 / 0.2);
+
+  --color-oak:            oklch(0.31 0.075 46.734);
+  --color-oak-light:      oklch(0.45 0.075 46.734);
+  --color-leather:        oklch(0.26 0.075 46.734);
+
+  --color-sage:           #7a8b6f;
+  --color-sage-bg:        rgba(122, 139, 111, 0.1);
+
+  --color-success:        #4a7c59;
+  --color-success-bg:     rgba(74, 124, 89, 0.08);
+  --color-warning:        oklch(0.31 0.075 46.734);
+  --color-warning-bg:     oklch(0.31 0.075 46.734 / 0.12);
+  --color-error:          #b33a3a;
+  --color-error-bg:       rgba(179, 58, 58, 0.08);
+  --color-info:           #4a6fa5;
+  --color-info-bg:        rgba(74, 111, 165, 0.08);
+
+  --color-white:          #ffffff;
+  --color-black:          #451a03;
+  --color-overlay:        rgba(69, 26, 3, 0.65);
+  --color-glass:          rgba(255, 251, 235, 0.9);
+  --color-glass-border:   rgba(217, 119, 6, 0.2);
+
+  --color-divider:        rgba(180, 83, 9, 0.15);
+  --color-divider-strong:  rgba(180, 83, 9, 0.3);
+
+  /* ── Typography ── */
+  --font-serif:           'Fraunces', 'Georgia', serif;
+  --font-sans:            'DM Sans', 'Segoe UI', system-ui, sans-serif;
+
+  --fs-xs:   0.75rem;    /* 12px */
+  --fs-sm:   0.8125rem;  /* 13px */
+  --fs-base: 0.9375rem;  /* 15px */
+  --fs-md:   1rem;       /* 16px */
+  --fs-lg:   1.125rem;   /* 18px */
+  --fs-xl:   1.375rem;   /* 22px */
+  --fs-2xl:  1.75rem;    /* 28px */
+  --fs-3xl:  2.25rem;    /* 36px */
+  --fs-4xl:  3rem;       /* 48px */
+  --fs-5xl:  3.75rem;    /* 60px */
+
+  --fw-light:    300;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --lh-tight:    1.2;
+  --lh-snug:     1.35;
+  --lh-normal:   1.6;
+  --lh-relaxed:  1.75;
+
+  --ls-tight:    -0.02em;
+  --ls-normal:   0;
+  --ls-wide:     0.04em;
+  --ls-widest:   0.1em;
+
+  /* ── Spacing ── */
+  --space-1:  0.25rem;   /* 4px */
+  --space-2:  0.5rem;    /* 8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  /* ── Borders & Radii ── */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  --border-thin:  1px solid var(--color-divider);
+  --border-accent: 2px solid var(--color-terracotta);
+
+  /* ── Shadows ── */
+  --shadow-xs:   0 1px 2px rgba(44, 24, 16, 0.04);
+  --shadow-sm:   0 2px 8px rgba(44, 24, 16, 0.06);
+  --shadow-md:   0 4px 16px rgba(44, 24, 16, 0.08);
+  --shadow-lg:   0 8px 32px rgba(44, 24, 16, 0.1);
+  --shadow-xl:   0 16px 48px rgba(44, 24, 16, 0.12);
+  --shadow-lift: 0 8px 24px rgba(44, 24, 16, 0.14);
+  --shadow-inner: inset 0 2px 4px rgba(44, 24, 16, 0.04);
+
+  /* ── Transitions ── */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+  --duration-slower: 600ms;
+
+  --transition-colors: color var(--duration-normal) var(--ease-out),
+                        background-color var(--duration-normal) var(--ease-out),
+                        border-color var(--duration-normal) var(--ease-out);
+  --transition-transform: transform var(--duration-normal) var(--ease-out);
+  --transition-shadow: box-shadow var(--duration-normal) var(--ease-out);
+  --transition-all: all var(--duration-normal) var(--ease-out);
+
+  /* ── Layout ── */
+  --sidebar-width:      260px;
+  --sidebar-collapsed:  72px;
+  --header-height:      64px;
+  --max-content-width:  1200px;
+
+  /* ── Z-index ── */
+  --z-dropdown:  100;
+  --z-sticky:    200;
+  --z-overlay:   300;
+  --z-modal:     400;
+  --z-toast:     500;
+}

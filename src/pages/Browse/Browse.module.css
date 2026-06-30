@@ -1,0 +1,189 @@
+.browse {
+  max-width: var(--max-content-width);
+  animation: fadeIn var(--duration-slow) var(--ease-out);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.browse-header {
+  margin-bottom: var(--space-6);
+}
+
+.browse-header h1 {
+  font-size: var(--fs-2xl);
+  margin-bottom: var(--space-2);
+}
+
+/* ── Controls Bar ── */
+.controls {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-wrap {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--color-charcoal-light);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  padding-left: var(--space-10);
+  background: var(--color-ivory);
+  border: 1px solid var(--color-divider-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-base);
+  color: var(--color-espresso);
+  transition: var(--transition-all);
+  min-height: 44px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-terracotta);
+  box-shadow: 0 0 0 3px var(--color-terracotta-bg);
+}
+
+.filter-select {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-ivory);
+  border: 1px solid var(--color-divider-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  color: var(--color-charcoal);
+  min-height: 44px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235c4f4a' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: var(--space-8);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-terracotta);
+  box-shadow: 0 0 0 3px var(--color-terracotta-bg);
+}
+
+/* ── Category Pills ── */
+.category-pills {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.category-pill {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  border: 1px solid var(--color-divider-strong);
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.category-pill:hover {
+  border-color: var(--color-terracotta);
+  color: var(--color-terracotta);
+}
+
+.category-pill.active {
+  background: var(--color-terracotta);
+  color: var(--color-white);
+  border-color: var(--color-terracotta);
+}
+
+/* ── Book Grid ── */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-8);
+}
+
+/* ── Pagination ── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.pagination-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  border: 1px solid var(--color-divider-strong);
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--color-terracotta);
+  color: var(--color-terracotta);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: var(--fs-sm);
+  color: var(--color-charcoal-light);
+}
+
+.results-count {
+  font-size: var(--fs-sm);
+  color: var(--color-charcoal-light);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Empty ── */
+.empty-state {
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  color: var(--color-charcoal-light);
+}
+
+.empty-state h3 {
+  font-family: var(--font-serif);
+  color: var(--color-charcoal-light);
+  margin-bottom: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .book-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+  .controls {
+    flex-direction: column;
+  }
+}

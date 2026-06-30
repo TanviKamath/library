@@ -1,0 +1,6 @@
+FLASK_APP=wsgi.py
+FLASK_ENV=development
+FLASK_DEBUG=1
+MAIL_USERNAME=tanvikamath222@gmail.com
+MAIL_PASSWORD=baxjdxlbsenoxgfs
+MAIL_DEFAULT_SENDER=tanvikamath222@gmail.com
