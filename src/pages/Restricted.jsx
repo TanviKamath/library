@@ -44,8 +44,11 @@ export default function Restricted() {
         This section of the library is reserved for staff members.
         If you believe you should have access, please contact your administrator.
       </p>
-      <Link to="/app/dashboard" className="btn btn-secondary">
-        ← Back to Dashboard
+      <Link to="/app/dashboard" className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to Dashboard
       </Link>
     </div>
   );

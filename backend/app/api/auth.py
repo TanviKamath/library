@@ -50,12 +50,14 @@ def logout():
     return response, 200
 
 @bp.route('/auth/me', methods=['GET'])
-@jwt_required()
+@jwt_required(optional=True)
 def get_me():
     user_id = get_jwt_identity()
+    if not user_id:
+        return jsonify(None), 200
     user = User.query.get(int(user_id))
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify(None), 200
     return jsonify(user.to_dict()), 200
 
 @bp.route('/auth/me', methods=['PUT'])

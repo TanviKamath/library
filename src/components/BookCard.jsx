@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import { getProxiedImageUrl } from '../utils/image';
+import { GrantedStamp } from './GrantedStamp';
 import styles from './BookCard.module.css';
 
 const starIcon = (
@@ -30,9 +31,44 @@ function getStatusLabel(book) {
 export function BookCard({ book, onLikeToggle }) {
   const navigate = useNavigate();
   const { isAuthenticated, isStaff, isAdmin } = useAuth();
-  const [imgError, setImgError] = useState(false);
+  // imgSrc stages: 'proxy' → 'direct' → 'error'
+  const [imgStage, setImgStage] = useState('proxy');
   const status = getStatus(book);
   const showLikeButton = isAuthenticated && !isAdmin;
+  const [reserved, setReserved] = useState(false);
+  const [reserving, setReserving] = useState(false);
+
+  function getImgSrc() {
+    if (!book.cover_image_url) return null;
+    if (imgStage === 'proxy') return getProxiedImageUrl(book.cover_image_url);
+    if (imgStage === 'direct') return book.cover_image_url;
+    return null;
+  }
+
+  function handleImgError() {
+    if (imgStage === 'proxy') {
+      setImgStage('direct'); // retry with direct URL
+    } else {
+      setImgStage('error'); // give up, show placeholder
+    }
+  }
+
+  async function handleReserve(e) {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setReserving(true);
+    try {
+      await api.post('/reservations/join', { book_id: book.id });
+      setReserved(true);
+    } catch (err) {
+      alert(err.message || 'Could not reserve book');
+    } finally {
+      setReserving(false);
+    }
+  }
 
   async function handleLike(e) {
     e.stopPropagation();
@@ -51,14 +87,14 @@ export function BookCard({ book, onLikeToggle }) {
 
   return (
     <div className={styles['book-card']} onClick={() => navigate(`/app/browse/${book.id}`)}>
-      <div className={styles['book-cover-wrap']}>
-        {book.cover_image_url && !imgError ? (
+      <div style={{ position: 'relative' }} className={`${styles['book-cover-wrap']} ${reserved ? 'global-card-stamped' : ''}`}>
+        {book.cover_image_url && imgStage !== 'error' ? (
           <img
-            src={getProxiedImageUrl(book.cover_image_url)}
+            src={getImgSrc()}
             alt={book.title}
             className={styles['book-cover']}
             loading="lazy"
-            onError={() => setImgError(true)}
+            onError={handleImgError}
           />
         ) : (
           <div className={styles['book-cover-placeholder']} style={{ background: book.cover_color || '#8b6f47' }}>
@@ -79,6 +115,7 @@ export function BookCard({ book, onLikeToggle }) {
             {heartOutline}
           </button>
         )}
+        {reserved && <GrantedStamp />}
       </div>
 
       <div className={styles['book-info']}>
@@ -97,6 +134,16 @@ export function BookCard({ book, onLikeToggle }) {
             </span>
           )}
         </div>
+        {isAuthenticated && !reserved && (
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ width: '100%', marginTop: '10px', fontSize: '0.75rem', borderRadius: '16px', padding: '6px' }}
+            onClick={handleReserve}
+            disabled={reserving}
+          >
+            {reserving ? 'Processing…' : (book.available_copies > 0 ? 'Reserve Book' : 'Join Waitlist')}
+          </button>
+        )}
       </div>
     </div>
   );

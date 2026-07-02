@@ -172,13 +172,7 @@ export default function Browse() {
         <button
           onClick={() => setViewMode(v => v === 'grid' ? 'sphere' : 'grid')}
           className={styles['filter-select']}
-          style={{
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            background: viewMode === 'sphere' ? 'var(--color-terracotta)' : undefined,
-            color: viewMode === 'sphere' ? '#fff' : undefined,
-            border: viewMode === 'sphere' ? '1px solid var(--color-terracotta)' : undefined
-          }}
+          style={{ fontWeight: viewMode === 'sphere' ? '600' : 'normal' }}
         >
           {viewMode === 'grid' ? '3D Sphere View' : 'Grid View'}
         </button>
@@ -237,8 +231,12 @@ export default function Browse() {
             className={styles['pagination-btn']}
             disabled={!pagination.has_prev}
             onClick={() => setPage(p => p - 1)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            ← Previous
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Previous
           </button>
           <span className={styles['pagination-info']}>
             Page {pagination.page} of {pagination.pages}
@@ -247,8 +245,12 @@ export default function Browse() {
             className={styles['pagination-btn']}
             disabled={!pagination.has_next}
             onClick={() => setPage(p => p + 1)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            Next →
+            Next
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
           </button>
         </div>
       )}

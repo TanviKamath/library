@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { getProxiedImageUrl } from '../../utils/image';
@@ -17,12 +17,25 @@ export default function EBooks() {
   const [pagination, setPagination] = useState({ page: 1, pages: 1 });
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const searchInputRef = useRef(null);
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+      setPage(1); // Reset to first page on new search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const data = await api.get(`/books?ebook_only=true&page=${page}&limit=12`);
+        const searchParam = debouncedQuery ? `&search=${encodeURIComponent(debouncedQuery)}` : '';
+        const data = await api.get(`/books?ebook_only=true&page=${page}&limit=12${searchParam}`);
         setBooks(data.books || []);
         setPagination(data.pagination || { page: 1, pages: 1 });
       } catch {
@@ -32,10 +45,11 @@ export default function EBooks() {
       }
     }
     load();
-  }, [page]);
+  }, [page, debouncedQuery]);
 
-  if (loading) {
-    return <div className={styles['empty-state']}><p>Loading e-books…</p></div>;
+  function handleClearSearch() {
+    setSearchQuery('');
+    searchInputRef.current?.focus();
   }
 
   return (
@@ -43,10 +57,48 @@ export default function EBooks() {
       <h1>E-Book Library</h1>
       <p>Read classic literature right in your browser, powered by Project Gutenberg.</p>
 
-      {books.length === 0 ? (
+      <div className={styles['search-bar']}>
+        <svg className={styles['search-icon']} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          ref={searchInputRef}
+          type="text"
+          className={styles['search-input']}
+          placeholder="Search by title or author…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            className={styles['search-clear']}
+            onClick={handleClearSearch}
+            aria-label="Clear search"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div className={styles['empty-state']}><p>Loading e-books…</p></div>
+      ) : books.length === 0 ? (
         <div className={styles['empty-state']}>
-          <h3>No e-books available</h3>
-          <p>E-books will appear here when added to the catalog.</p>
+          {debouncedQuery ? (
+            <>
+              <h3>No results found</h3>
+              <p>No e-books match "<strong>{debouncedQuery}</strong>". Try a different search term.</p>
+            </>
+          ) : (
+            <>
+              <h3>No e-books available</h3>
+              <p>E-books will appear here when added to the catalog.</p>
+            </>
+          )}
         </div>
       ) : (
         <div className={styles['shelf-grid']}>
@@ -87,7 +139,7 @@ export default function EBooks() {
                   <div className={styles['shelf-title']}>{book.title}</div>
                   <div className={styles['shelf-author']}>{book.author_name || 'Unknown Author'}</div>
 
-                  {progress && (
+                  {progress ? (
                     <>
                       <div className={styles['progress-bar-wrap']}>
                         <div className={styles['progress-bar']} style={{ width: `${pct}%` }} />
@@ -97,9 +149,24 @@ export default function EBooks() {
                         className={styles['continue-btn']}
                         onClick={(e) => { e.stopPropagation(); navigate(`/app/ebooks/${book.id}/read`); }}
                       >
-                        Continue Reading →
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                        </svg>
+                        Continue Reading
                       </button>
                     </>
+                  ) : (
+                    <button
+                      className={styles['read-btn']}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/app/ebooks/${book.id}/read`); }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                      </svg>
+                      Read
+                    </button>
                   )}
                 </div>
               </div>
@@ -111,13 +178,19 @@ export default function EBooks() {
       {pagination.pages > 1 && (
         <div className={styles.pagination}>
           <button className="btn btn-ghost btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
-            ← Previous
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Previous
           </button>
           <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)' }}>
             Page {pagination.page} of {pagination.pages}
           </span>
-          <button className="btn btn-ghost btn-sm" disabled={!pagination.has_next} onClick={() => setPage(p => p + 1)}>
-            Next →
+          <button className="btn btn-ghost btn-sm" disabled={!pagination.has_next} onClick={() => setPage(p => p + 1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            Next
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
           </button>
         </div>
       )}

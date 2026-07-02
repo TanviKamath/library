@@ -147,6 +147,11 @@
   color: var(--color-warning);
 }
 
+.badge-info {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 /* ── Recommendations Grid ── */
 .rec-grid {
   display: grid;
@@ -343,12 +348,12 @@
 .spotlight-grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: var(--space-8);
+  gap: var(--space-4);
   background: #ffffff;
-  padding: var(--space-8);
+  padding: var(--space-5);
   border-radius: 28px;
   border: 1px solid var(--color-divider);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
   box-shadow: var(--shadow-sm);
   align-items: center;
 }
@@ -357,7 +362,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: var(--space-4);
+  padding: var(--space-2);
 }
 
 .spotlight-tag {
@@ -369,9 +374,9 @@
   letter-spacing: 0.05em;
   color: #7b623b;
   background: #f1ebd9;
-  padding: 6px 14px;
+  padding: 4px 12px;
   border-radius: 50px;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-3);
 }
 
 .spotlight-title {
@@ -386,7 +391,7 @@
 .spotlight-author {
   font-size: var(--fs-md);
   color: #7b623b;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-3);
   font-style: italic;
 }
 
@@ -394,7 +399,7 @@
   font-size: var(--fs-sm);
   color: var(--color-charcoal);
   line-height: 1.6;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4);
 }
 
 .spotlight-actions {
@@ -505,10 +510,10 @@
 }
 
 .spotlight-canvas {
-  height: 340px;
+  height: 330px;
   position: relative;
-  overflow: hidden;
-  border-radius: 20px;
+  overflow: visible;
+  border-radius: 16px;
   background-color: #d8d2c4;
   background-image: url('/spotlight_bg.png');
   background-size: cover;

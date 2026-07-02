@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import { BookCard } from '../../components/BookCard';
+import { GrantedStamp } from '../../components/GrantedStamp';
 import { getProxiedImageUrl } from '../../utils/image';
 import styles from './BookDetail.module.css';
 
@@ -60,7 +61,7 @@ export default function BookDetail() {
     setActionMsg(null);
     try {
       await api.post('/reservations/join', { book_id: Number(id) });
-      setActionMsg({ type: 'success', text: 'You\'ve been added to the waitlist!' });
+      setActionMsg({ type: 'success', text: book.available_copies > 0 ? 'Book reserved successfully!' : 'You\'ve been added to the waitlist!' });
     } catch (err) {
       setActionMsg({ type: 'error', text: err.message });
     } finally {
@@ -96,13 +97,16 @@ export default function BookDetail() {
 
   return (
     <div className={styles.detail}>
-      <button className={styles['back-link']} onClick={() => navigate('/app/browse')}>
-        ← Back to Browse
+      <button className={styles['back-link']} onClick={() => navigate('/app/browse')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to Browse
       </button>
 
       <div className={styles['detail-top']}>
         {/* Cover */}
-        <div className={styles['cover-wrap']}>
+        <div style={{ position: 'relative' }} className={`${styles['cover-wrap']} ${actionMsg?.type === 'success' ? 'global-card-stamped' : ''}`}>
           {book.cover_image_url ? (
             <img
               src={getProxiedImageUrl(book.cover_image_url)}
@@ -123,6 +127,7 @@ export default function BookDetail() {
           >
             {book.title}
           </div>
+          {actionMsg?.type === 'success' && <GrantedStamp />}
         </div>
 
         {/* Info */}
@@ -166,13 +171,13 @@ export default function BookDetail() {
           )}
 
           <div className={styles['detail-actions']}>
-            {book.available_copies <= 0 && isAuthenticated && (
+            {isAuthenticated && actionMsg?.type !== 'success' && (
               <button
                 className="btn btn-secondary"
                 onClick={handleReserve}
                 disabled={actionLoading}
               >
-                {actionLoading ? 'Joining…' : 'Join Waitlist'}
+                {actionLoading ? 'Processing…' : (book.available_copies > 0 ? 'Reserve Book' : 'Join Waitlist')}
               </button>
             )}
             {book.gutenberg_id && (

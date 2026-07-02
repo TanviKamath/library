@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import styles from './Profile.module.css';
+import OverdueStamp from '../../components/OverdueStamp/OverdueStamp';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -107,9 +108,10 @@ export default function Profile() {
             <div className={styles['stat-label']}>Currently Borrowed</div>
             <div className={styles['stat-value']}>{active.length}</div>
           </div>
-          <div className={`${styles['stat-card']} ${overdueCount > 0 ? styles.accent : ''}`}>
+          <div className={styles['stat-card']} style={{ position: 'relative', overflow: 'hidden' }}>
             <div className={styles['stat-label']}>Overdue</div>
             <div className={styles['stat-value']}>{overdueCount}</div>
+            {overdueCount > 0 && <OverdueStamp />}
           </div>
           <div className={styles['stat-card']}>
             <div className={styles['stat-label']}>Total Borrowed</div>

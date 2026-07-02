@@ -9,10 +9,10 @@ const FRAME_STEP = 2;
 const SAMPLED_COUNT = Math.ceil(TOTAL_FRAMES / FRAME_STEP);
 
 function getFramePath(index) {
-  // Frames are 1-indexed: ezgif-frame-001.png to ezgif-frame-118.png
+  // Frames are 1-indexed: ezgif-frame-001.webp to ezgif-frame-118.webp
   const frameNum = index * FRAME_STEP + 1;
   const clamped = Math.min(frameNum, TOTAL_FRAMES);
-  return `/frames/ezgif-frame-${String(clamped).padStart(3, '0')}.png`;
+  return `/frames_webp/ezgif-frame-${String(clamped).padStart(3, '0')}.webp`;
 }
 
 export default function Home() {
@@ -106,15 +106,18 @@ export default function Home() {
                 Brew & Borrow
               </h1>
               <p className={styles['hero-subtitle']}>
-                Where pages meet pour-overs, and every shelf tells a story.
-                Step into our café library — a sanctuary for the curious,
+                Where pages meet pour overs, and every shelf tells a story.
+                Step into our café library, a sanctuary for the curious,
                 the contemplative, and the caffeinated.
               </p>
               <div className={styles['hero-cta']}>
                 {isAuthenticated ? (
                   <>
-                    <Link to="/app/dashboard" className={styles['hero-btn-primary']}>
-                      Dashboard →
+                    <Link to="/app/dashboard" className={styles['hero-btn-primary']} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      Dashboard
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/>
+                      </svg>
                     </Link>
                     <Link to="/gallery" className={styles['hero-btn-secondary']}>
                       🌐 Enter 3D Library
@@ -126,7 +129,7 @@ export default function Home() {
                       Sign In
                     </Link>
                     <Link to="/gallery" className={styles['hero-btn-secondary']}>
-                      🌐 Enter Library
+                      Enter Library
                     </Link>
                   </>
                 )}

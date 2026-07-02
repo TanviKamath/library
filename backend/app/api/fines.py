@@ -33,7 +33,19 @@ def get_pending_fines():
             pending.append(txn)
     return jsonify([t.to_dict() for t in pending]), 200
 
-@bp.route('/fines/<int:id>/pay', methods=['POST'])
+@bp.route('/fines/<int:id>/amount', methods=['PATCH'])
+@jwt_required()
+def update_fine_amount(id):
+    txn = Transaction.query.get_or_404(id)
+    data = request.get_json()
+    amount = data.get('fine_amount')
+    if amount is None or float(amount) < 0:
+        return jsonify({'error': 'Invalid fine amount'}), 400
+    txn.fine_amount = float(amount)
+    db.session.commit()
+    return jsonify({'message': 'Fine amount updated', 'transaction': txn.to_dict()}), 200
+
+
 @jwt_required()
 def pay_fine(id):
     txn = Transaction.query.get_or_404(id)

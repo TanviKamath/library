@@ -1,0 +1,33 @@
+.stamp {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 72px;
+  height: 72px;
+  pointer-events: none;
+  transform: rotate(-14deg);
+  opacity: 0.82;
+  animation: stampDrop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 2px rgba(220, 38, 38, 0.25));
+}
+
+@keyframes stampDrop {
+  0% {
+    opacity: 0;
+    transform: rotate(-14deg) scale(2.2);
+    filter: blur(3px);
+  }
+  80% {
+    opacity: 0.9;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0.82;
+    transform: rotate(-14deg) scale(1);
+  }
+}

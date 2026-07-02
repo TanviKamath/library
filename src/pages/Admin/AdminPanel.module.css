@@ -130,6 +130,45 @@
   background: var(--color-error-bg);
 }
 
+/* ── Icon Buttons (edit / delete / etc.) ── */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider-strong);
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  margin-right: var(--space-1);
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: var(--color-cream-light);
+  border-color: var(--color-terracotta);
+  color: var(--color-terracotta);
+  transform: translateY(-1px);
+}
+
+.icon-btn:active {
+  transform: translateY(0);
+}
+
+.icon-btn-danger {
+  color: var(--color-charcoal-light);
+}
+
+.icon-btn-danger:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+  color: var(--color-error);
+  transform: translateY(-1px);
+}
+
 /* ── Badges ── */
 .badge {
   display: inline-flex;
@@ -222,11 +261,107 @@
 }
 
 /* ── Issue Form ── */
+.issue-card {
+  margin-bottom: var(--space-8);
+  padding: var(--space-8);
+  background: var(--color-ivory);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-divider);
+  box-shadow: 0 4px 20px rgba(43, 26, 10, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.issue-title {
+  font-size: var(--fs-xl);
+  font-family: var(--font-serif);
+  color: var(--color-espresso);
+  margin-bottom: var(--space-6);
+  font-weight: var(--fw-bold);
+}
+
 .issue-row {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-6);
   align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.issue-field {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.issue-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-charcoal-light);
+}
+
+/* Custom select wrapper — hides native arrow, shows our SVG */
+.select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.issue-select {
+  width: 100%;
+  padding: var(--space-3) var(--space-10) var(--space-3) var(--space-4);
+  background: var(--color-cream-light);
+  border: 1px solid var(--color-divider-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  color: var(--color-espresso);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  min-height: 42px;
+}
+
+.issue-select:hover {
+  border-color: var(--color-oak-light);
+}
+
+.issue-select:focus {
+  outline: none;
+  border-color: var(--color-terracotta);
+  box-shadow: 0 0 0 3px var(--color-terracotta-bg);
+}
+
+.select-chevron {
+  position: absolute;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--color-charcoal-light);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* ── Fine Amount Inline Edit Input ── */
+.fine-input {
+  width: 72px;
+  padding: 3px 6px;
+  border: 1px solid var(--color-divider-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: #dc2626;
+  background: var(--color-ivory);
+  text-align: right;
+}
+
+.fine-input:focus {
+  outline: none;
+  border-color: var(--color-terracotta);
+  box-shadow: 0 0 0 2px var(--color-terracotta-bg);
 }
 
 @media (max-width: 768px) {

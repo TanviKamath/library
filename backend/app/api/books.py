@@ -339,30 +339,52 @@ def search_gutenberg_books():
 
 @bp.route('/books/<int:id>/read', methods=['GET'])
 def read_book_content(id):
+    import os
+    import requests
+    from flask import current_app
+
     book = Book.query.get_or_404(id)
     if not book.gutenberg_id:
         return jsonify({'error': 'This book does not have an e-book version available.'}), 400
         
     gid = book.gutenberg_id
-    urls = [
-        f"https://www.gutenberg.org/cache/epub/{gid}/pg{gid}.txt",
-        f"https://www.gutenberg.org/files/{gid}/{gid}-0.txt",
-        f"https://www.gutenberg.org/files/{gid}/{gid}.txt"
-    ]
-    
+    project_root = os.path.abspath(os.path.join(current_app.root_path, '..', '..'))
+    ebooks_dir = os.path.join(project_root, 'downloaded_ebooks')
+    os.makedirs(ebooks_dir, exist_ok=True)
+    local_filepath = os.path.join(ebooks_dir, f"{gid}.txt")
+
     content = None
-    for url in urls:
+    # 1. Read from local disk first (fast & reliable)
+    if os.path.exists(local_filepath):
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (CafeReader/1.0)'})
-            with urllib.request.urlopen(req, timeout=8) as res:
-                raw_bytes = res.read()
-                try:
-                    content = raw_bytes.decode('utf-8')
-                except UnicodeDecodeError:
-                    content = raw_bytes.decode('latin-1', errors='replace')
-                break
-        except Exception:
-            continue
+            with open(local_filepath, 'r', encoding='utf-8', errors='replace') as f:
+                content = f.read()
+        except Exception as e:
+            current_app.logger.warning(f"Error reading local ebook file: {e}")
+
+    # 2. If not found locally, fetch via requests with browser User-Agent and save locally
+    if not content or len(content) < 500:
+        urls = [
+            f"https://www.gutenberg.org/cache/epub/{gid}/pg{gid}.txt",
+            f"https://www.gutenberg.org/files/{gid}/{gid}-0.txt",
+            f"https://www.gutenberg.org/files/{gid}/{gid}.txt"
+        ]
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+        }
+        for url in urls:
+            try:
+                r = requests.get(url, headers=headers, timeout=10)
+                if r.status_code == 200 and len(r.text) > 500:
+                    content = r.text
+                    try:
+                        with open(local_filepath, 'w', encoding='utf-8', errors='replace') as f:
+                            f.write(content)
+                    except Exception:
+                        pass
+                    break
+            except Exception:
+                continue
             
     if not content:
         return jsonify({'error': 'Could not retrieve e-book content from Project Gutenberg servers.'}), 502
@@ -434,28 +456,52 @@ def read_book_content(id):
 
 @bp.route('/proxy-image', methods=['GET'])
 def proxy_image():
-    import urllib.request
-    from flask import Response
+    import os
+    import requests
+    import urllib.parse
+    from flask import Response, redirect, send_from_directory, current_app
+    from app.models.book import Book
+
     url = request.args.get('url')
     if not url:
         return jsonify({'error': 'URL is required'}), 400
+
+    # 1. Serve from local downloaded_covers folder if available
     try:
-        req = urllib.request.Request(url, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-            'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://www.gutenberg.org/'
-        })
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            content = resp.read()
-            status_code = resp.status
-            excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-            headers = [
-                (name, value) for name, value in resp.headers.items()
-                if name.lower() not in excluded_headers
-            ]
-            headers.append(('Access-Control-Allow-Origin', '*'))
-            headers.append(('Cache-Control', 'public, max-age=86400'))
-            return Response(content, status=status_code, headers=headers)
+        project_root = os.path.abspath(os.path.join(current_app.root_path, '..', '..'))
+        covers_dir = os.path.join(project_root, 'downloaded_covers')
+        if os.path.exists(covers_dir):
+            book = Book.query.filter_by(cover_image_url=url).first()
+            if not book:
+                filename_part = url.split('/')[-1]
+                if filename_part:
+                    book = Book.query.filter(Book.cover_image_url.like(f"%{filename_part}%")).first()
+            if book:
+                prefix = f"{book.id}_"
+                for fname in os.listdir(covers_dir):
+                    if fname.startswith(prefix):
+                        return send_from_directory(covers_dir, fname, max_age=86400)
     except Exception as e:
-        return jsonify({'error': str(e)}), 502
+        current_app.logger.warning(f"Local cover lookup failed: {e}")
+
+    # 2. If not local, fetch via robust CDN proxy or requests
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+    }
+    try:
+        target_url = url
+        if 'openlibrary.org' in url or 'archive.org' in url:
+            target_url = f"https://wsrv.nl/?url={urllib.parse.quote(url)}"
+        r = requests.get(target_url, headers=headers, timeout=8)
+        if r.status_code == 200:
+            return Response(r.content, status=200, headers={
+                'Content-Type': r.headers.get('Content-Type', 'image/jpeg'),
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'public, max-age=86400'
+            })
+    except Exception:
+        pass
+
+    # 3. Final fallback redirect to image proxy
+    proxy_url = f"https://wsrv.nl/?url={urllib.parse.quote(url)}"
+    return redirect(proxy_url, code=302)

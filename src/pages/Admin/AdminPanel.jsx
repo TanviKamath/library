@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import styles from './AdminPanel.module.css';
+import AdminTable from '../../components/AdminTable/AdminTable';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -33,14 +34,59 @@ function downloadTemplate(filename, headers, sampleRow) {
   downloadCSV(filename, headers, [sampleRow]);
 }
 
-function CSVToolbar({ onExport, onImport, onTemplate, count, label, children }) {
+function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, search, onSearchChange, searchPlaceholder = "Search...", sort, onSortChange, sortOptions }) {
   return (
     <>
-      <div className={styles.toolbar} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)', marginRight: 'auto' }}>
-          {count} {label}
-        </span>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div className={styles.toolbar} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: '1 1 auto' }}>
+          <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)', fontWeight: 600 }}>
+            {count} {label}
+          </span>
+
+          {onSearchChange && (
+            <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '1px solid var(--color-parchment-border)', borderRadius: 'var(--radius-md)', padding: '5px 12px', minWidth: '220px', flex: '1 1 200px', maxWidth: '300px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
+              <svg style={{ marginRight: '8px', flexShrink: 0 }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={e => onSearchChange(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px', color: 'var(--color-espresso)' }}
+              />
+              {search && (
+                <button
+                  onClick={() => onSearchChange('')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#888', padding: '0 2px' }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+
+          {onSortChange && sortOptions && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid var(--color-parchment-border)', borderRadius: 'var(--radius-md)', padding: '5px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-terracotta)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" title="Sort / Filter Order">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              <select
+                value={sort}
+                onChange={e => onSortChange(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 500, color: 'var(--color-espresso)', cursor: 'pointer', paddingRight: '4px' }}
+              >
+                {sortOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {onTemplate && (
             <button className="btn btn-secondary btn-sm" onClick={onTemplate} title="Download CSV template">
               Get Template
@@ -57,8 +103,8 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children }) 
               Export CSV
             </button>
           )}
+          {children}
         </div>
-        {children}
       </div>
     </>
   );
@@ -105,6 +151,9 @@ function TransactionsTab() {
   // Issue form
   const [issueBookId, setIssueBookId] = useState('');
   const [issueUserId, setIssueUserId] = useState('');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('newest');
+  const [showIssueModal, setShowIssueModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -132,6 +181,7 @@ function TransactionsTab() {
       await api.post('/transactions/issue', { book_id: Number(issueBookId), user_id: Number(issueUserId) });
       setMsg({ type: 'success', text: 'Book issued successfully!' });
       setIssueBookId(''); setIssueUserId('');
+      setShowIssueModal(false);
       loadData();
     } catch (err) { setMsg({ type: 'error', text: err.message }); }
   }
@@ -198,8 +248,28 @@ function TransactionsTab() {
 
   if (loading) return <div className={styles['empty-state']}><p>Loading…</p></div>;
 
-  const renewalRequests = transactions.filter(t => t.status === 'renewal_requested');
-  const active = transactions.filter(t => t.status === 'active' || t.status === 'overdue' || t.status === 'renewal_requested');
+  function filterAndSort(list) {
+    let filtered = list;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(t => 
+        String(t.id).includes(q) ||
+        (t.book_title && t.book_title.toLowerCase().includes(q)) ||
+        (t.user_name && t.user_name.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_book') return (a.book_title || '').localeCompare(b.book_title || '');
+      if (sort === 'za_book') return (b.book_title || '').localeCompare(a.book_title || '');
+      if (sort === 'az_member') return (a.user_name || '').localeCompare(b.user_name || '');
+      if (sort === 'za_member') return (b.user_name || '').localeCompare(a.user_name || '');
+      if (sort === 'oldest') return new Date(a.issued_at || 0) - new Date(b.issued_at || 0);
+      return new Date(b.issued_at || 0) - new Date(a.issued_at || 0); // newest
+    });
+  }
+
+  const renewalRequests = filterAndSort(transactions.filter(t => t.status === 'renewal_requested'));
+  const active = filterAndSort(transactions.filter(t => t.status === 'active' || t.status === 'overdue' || t.status === 'renewal_requested'));
 
   function handleExportCSV() {
     if (transactions.length === 0) return;
@@ -219,7 +289,22 @@ function TransactionsTab() {
         count={transactions.length}
         label="transactions"
         onExport={handleExportCSV}
-      />
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search book, member, ID..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'newest', label: 'Newest First' },
+          { value: 'oldest', label: 'Oldest First' },
+          { value: 'az_book', label: 'Book Title (A-Z)' },
+          { value: 'za_book', label: 'Book Title (Z-A)' },
+          { value: 'az_member', label: 'Member Name (A-Z)' },
+          { value: 'za_member', label: 'Member Name (Z-A)' },
+        ]}
+      >
+        <button className="btn btn-primary btn-sm" onClick={() => setShowIssueModal(true)}>+ Issue Book</button>
+      </CSVToolbar>
 
       {/* Pending Renewal Requests */}
       {renewalRequests.length > 0 && (
@@ -227,110 +312,72 @@ function TransactionsTab() {
           <h3 style={{ marginBottom: 'var(--space-4)', color: '#b45309', display: 'flex', alignItems: 'center', gap: '8px' }}>
             Pending Renewal Requests ({renewalRequests.length})
           </h3>
-          <table className={styles['data-table']}>
-            <thead><tr><th>ID</th><th>Book</th><th>Member</th><th>Original Due</th><th>Actions</th></tr></thead>
-            <tbody>
-              {renewalRequests.map(t => (
-                <tr key={t.id}>
-                  <td>{t.id}</td>
-                  <td style={{ fontWeight: 600, color: 'var(--color-espresso)' }}>{t.book_title}</td>
-                  <td>{t.user_name}</td>
-                  <td>{formatDate(t.due_date)}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button className="btn btn-primary btn-sm" onClick={() => handleApproveRenewal(t.id)}>
-                        Accept (+14 Days)
-                      </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => handleRejectRenewal(t.id)}>
-                        Reject
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <AdminTable
+            data={renewalRequests}
+            empty="No renewal requests."
+            columns={[
+              { key: 'id', header: 'ID' },
+              { key: 'book_title', header: 'Book', render: t => <span style={{ fontWeight: 600, color: 'var(--color-espresso)' }}>{t.book_title}</span> },
+              { key: 'user_name', header: 'Member' },
+              { key: 'due_date', header: 'Original Due', render: t => formatDate(t.due_date) },
+              { key: 'actions', header: 'Actions', render: t => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => handleApproveRenewal(t.id)}>Accept (+14 Days)</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => handleRejectRenewal(t.id)}>Reject</button>
+                </div>
+              )},
+            ]}
+          />
         </div>
       )}
 
-      {/* Issue Form */}
-      <div style={{ marginBottom: 'var(--space-8)', padding: 'var(--space-6)', background: 'var(--color-ivory)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-divider)' }}>
-        <h3 style={{ marginBottom: 'var(--space-4)' }}>Issue a Book</h3>
-        <form onSubmit={handleIssue} className={styles['issue-row']}>
-          <div className="form-group" style={{ flex: 1, minWidth: 200 }}>
-            <label htmlFor="issue-book" className="form-label">Book</label>
-            <select id="issue-book" className="input" value={issueBookId} onChange={e => setIssueBookId(e.target.value)} required>
-              <option value="">Select a book…</option>
-              {books.filter(b => b.available_copies > 0).map(b => (
-                <option key={b.id} value={b.id}>{b.title} ({b.available_copies} available)</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group" style={{ flex: 1, minWidth: 200 }}>
-            <label htmlFor="issue-member" className="form-label">Member</label>
-            <select id="issue-member" className="input" value={issueUserId} onChange={e => setIssueUserId(e.target.value)} required>
-              <option value="">Select a member…</option>
-              {members.map(m => <option key={m.id} value={m.id}>{m.full_name} ({m.username})</option>)}
-            </select>
-          </div>
-          <button type="submit" className="btn btn-primary">Issue</button>
-        </form>
-      </div>
-
       {/* Active Transactions Table */}
       <h3 style={{ marginBottom: 'var(--space-4)' }}>Active Transactions ({active.length})</h3>
-      {active.length === 0 ? (
-        <div className={styles['empty-state']}><p>No active transactions.</p></div>
-      ) : (
-        <table className={styles['data-table']}>
-          <thead><tr><th>ID</th><th>Book</th><th>Member</th><th>Issued</th><th>Due</th><th>Status</th><th>Fine</th><th>Actions</th></tr></thead>
-          <tbody>
-            {active.map(t => {
+      <AdminTable
+          data={active}
+          empty="No active transactions."
+          columns={[
+            { key: 'id', header: 'ID' },
+            { key: 'book_title', header: 'Book', render: t => <span style={{ fontWeight: 500 }}>{t.book_title}</span> },
+            { key: 'user_name', header: 'Member' },
+            { key: 'issued_at', header: 'Issued', render: t => formatDate(t.issued_at) },
+            { key: 'due_date', header: 'Due', render: t => formatDate(t.due_date) },
+            { key: 'status', header: 'Status', render: t => {
               const fine = getPendingFine(t);
               return (
-                <tr key={t.id}>
-                  <td>{t.id}</td>
-                  <td style={{ fontWeight: 500 }}>{t.book_title}</td>
-                  <td>{t.user_name}</td>
-                  <td>{formatDate(t.issued_at)}</td>
-                  <td>{formatDate(t.due_date)}</td>
-                  <td>
-                    <span className={`${styles.badge} ${t.status === 'renewal_requested' ? styles['badge-warning'] : t.status === 'overdue' || fine > 0 ? styles['badge-inactive'] : styles['badge-active']}`}>
-                      {t.status === 'renewal_requested' ? 'Renewal Req.' : (t.status === 'overdue' || fine > 0 ? 'overdue' : t.status)}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    {fine > 0 ? (
-                      <span style={{ fontWeight: 600, color: '#dc2626', fontSize: 'var(--fs-sm)' }}>₹{fine} (Pending)</span>
-                    ) : t.fine_paid && t.fine_amount > 0 ? (
-                      <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 'var(--fs-sm)' }}>Paid(₹{t.fine_amount})</span>
-                    ) : (
-                      <span style={{ color: 'var(--color-charcoal-light)' }}>—</span>
-                    )}
-                  </td>
-                  <td>
-                    {fine > 0 ? (
-                      <button
-                        className={styles['action-btn']}
-                        onClick={() => handleCollectAndReturn(t.id, fine)}
-                        style={{ background: '#d97706', borderColor: '#b45309', color: '#ffffff', minWidth: '130px' }}
-                      >
-                        Collect & Return
-                      </button>
-                    ) : (
-                      <button
-                        className={styles['action-btn']}
-                        onClick={() => handleReturn(t.id)}
-                      >
-                        Return
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                <span className={`${styles.badge} ${t.status === 'renewal_requested' ? styles['badge-warning'] : t.status === 'overdue' || fine > 0 ? styles['badge-inactive'] : styles['badge-active']}`}>
+                  {t.status === 'renewal_requested' ? 'Renewal Req.' : (t.status === 'overdue' || fine > 0 ? 'Overdue' : 'Active')}
+                </span>
               );
-            })}
-          </tbody>
-        </table>
+            }},
+            { key: 'fine', header: 'Fine', align: 'center', render: t => {
+              const fine = getPendingFine(t);
+              return fine > 0
+                ? <span style={{ fontWeight: 600, color: '#dc2626', fontSize: 'var(--fs-sm)' }}>₹{fine} (Pending)</span>
+                : t.fine_paid && t.fine_amount > 0
+                  ? <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 'var(--fs-sm)' }}>Paid(₹{t.fine_amount})</span>
+                  : <span style={{ color: 'var(--color-charcoal-light)' }}>—</span>;
+            }},
+            { key: 'actions', header: 'Actions', render: t => {
+              const fine = getPendingFine(t);
+              return fine > 0
+                ? <button className={styles['action-btn']} onClick={() => handleCollectAndReturn(t.id, fine)} style={{ background: '#d97706', borderColor: '#b45309', color: '#ffffff', minWidth: '130px' }}>Collect & Return</button>
+                : <button className={styles['action-btn']} onClick={() => handleReturn(t.id)}>Return</button>;
+            }},
+          ]}
+        />
+
+      {showIssueModal && (
+        <IssueBookModal
+          books={books}
+          members={members}
+          issueBookId={issueBookId}
+          setIssueBookId={setIssueBookId}
+          issueUserId={issueUserId}
+          setIssueUserId={setIssueUserId}
+          onSubmit={handleIssue}
+          onClose={() => setShowIssueModal(false)}
+        />
       )}
     </>
   );
@@ -346,6 +393,8 @@ function BooksTab() {
   const [showForm, setShowForm] = useState(false);
   const [editBook, setEditBook] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('az_title');
 
   useEffect(() => { loadBooks(); }, []);
 
@@ -420,40 +469,91 @@ function BooksTab() {
 
   if (loading) return <div className={styles['empty-state']}><p>Loading…</p></div>;
 
+  function filterAndSortBooks() {
+    let filtered = books;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(b =>
+        String(b.id).includes(q) ||
+        (b.title && b.title.toLowerCase().includes(q)) ||
+        (b.author_name && b.author_name.toLowerCase().includes(q)) ||
+        (b.category_name && b.category_name.toLowerCase().includes(q)) ||
+        (b.isbn && b.isbn.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_title') return (a.title || '').localeCompare(b.title || '');
+      if (sort === 'za_title') return (b.title || '').localeCompare(a.title || '');
+      if (sort === 'az_author') return (a.author_name || '').localeCompare(b.author_name || '');
+      if (sort === 'za_author') return (b.author_name || '').localeCompare(a.author_name || '');
+      if (sort === 'rating_high') return (b.rating || 0) - (a.rating || 0);
+      if (sort === 'rating_low') return (a.rating || 0) - (b.rating || 0);
+      return 0;
+    });
+  }
+
+  const displayedBooks = filterAndSortBooks();
+
   return (
     <>
       {msg && <div className={`${styles.msg} ${styles[`msg-${msg.type}`]}`}>{msg.text}</div>}
 
       <CSVToolbar
-        count={books.length}
+        count={displayedBooks.length}
         label="books"
         onExport={handleExportCSV}
         onImport={handleImportCSV}
         onTemplate={handleDownloadTemplate}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search book title, author, ISBN..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'az_title', label: 'Title (A-Z)' },
+          { value: 'za_title', label: 'Title (Z-A)' },
+          { value: 'az_author', label: 'Author (A-Z)' },
+          { value: 'za_author', label: 'Author (Z-A)' },
+          { value: 'rating_high', label: 'Highest Rating' },
+          { value: 'rating_low', label: 'Lowest Rating' },
+        ]}
       >
         <button className="btn btn-primary btn-sm" onClick={() => { setEditBook(null); setShowForm(true); }}>
           + Add Book
         </button>
       </CSVToolbar>
 
-      <table className={styles['data-table']}>
-        <thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Rating</th><th>Actions</th></tr></thead>
-        <tbody>
-          {books.map(b => (
-            <tr key={b.id}>
-              <td style={{ fontWeight: 500, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</td>
-              <td>{b.author_name}</td>
-              <td>{b.category_name}</td>
-              <td>{b.available_copies}/{b.total_copies}</td>
-              <td>{b.rating > 0 ? Number(b.rating).toFixed(1) : '—'}</td>
-              <td>
-                <button className={styles['action-btn']} onClick={() => { setEditBook(b); setShowForm(true); }}>Edit</button>
-                <button className={`${styles['action-btn']} ${styles.danger}`} onClick={() => handleDelete(b.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h3 style={{ marginBottom: 'var(--space-4)' }}>Book Catalog ({displayedBooks.length})</h3>
+      <AdminTable
+        data={displayedBooks}
+        empty="No books found."
+        columns={[
+          { key: 'id', header: 'ID' },
+          { key: 'title', header: 'Title', render: b => <span style={{ fontWeight: 500, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{b.title}</span> },
+          { key: 'author_name', header: 'Author' },
+          { key: 'category_name', header: 'Category' },
+          { key: 'copies', header: 'Copies', render: b => `${b.available_copies}/${b.total_copies}` },
+          { key: 'rating', header: 'Rating', render: b => b.rating > 0 ? Number(b.rating).toFixed(1) : '—' },
+          { key: 'actions', header: 'Actions', render: b => (
+            <>
+              <button className={styles['icon-btn']} onClick={() => { setEditBook(b); setShowForm(true); }} title="Edit book" aria-label="Edit book">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => handleDelete(b.id)} title="Delete book" aria-label="Delete book">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </>
+          )},
+        ]}
+      />
 
       {showForm && (
         <BookFormModal
@@ -540,6 +640,8 @@ function MembersTab({ isAdmin }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('az_name');
 
   useEffect(() => { loadMembers(); }, []);
 
@@ -605,41 +707,86 @@ function MembersTab({ isAdmin }) {
     e.target.value = '';
   }
 
+  function filterAndSortMembers() {
+    let filtered = members;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(m =>
+        String(m.id).includes(q) ||
+        (m.full_name && m.full_name.toLowerCase().includes(q)) ||
+        (m.username && m.username.toLowerCase().includes(q)) ||
+        (m.email && m.email.toLowerCase().includes(q)) ||
+        (m.role && m.role.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_name') return (a.full_name || '').localeCompare(b.full_name || '');
+      if (sort === 'za_name') return (b.full_name || '').localeCompare(a.full_name || '');
+      if (sort === 'az_username') return (a.username || '').localeCompare(b.username || '');
+      if (sort === 'za_username') return (b.username || '').localeCompare(a.username || '');
+      return 0;
+    });
+  }
+
+  const displayedMembers = filterAndSortMembers();
+
   return (
     <>
       {msg && <div className={`${styles.msg} ${styles[`msg-${msg.type}`]}`}>{msg.text}</div>}
 
       <CSVToolbar
-        count={members.length}
+        count={displayedMembers.length}
         label="members"
         onExport={handleExportCSV}
         onImport={handleImportCSV}
         onTemplate={handleDownloadTemplate}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search member name, email, username..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'az_name', label: 'Name (A-Z)' },
+          { value: 'za_name', label: 'Name (Z-A)' },
+          { value: 'az_username', label: 'Username (A-Z)' },
+          { value: 'za_username', label: 'Username (Z-A)' },
+        ]}
       >
         <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add Member</button>
       </CSVToolbar>
 
-      <table className={styles['data-table']}>
-        <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Expires</th><th>Actions</th></tr></thead>
-        <tbody>
-          {members.map(m => (
-            <tr key={m.id}>
-              <td style={{ fontWeight: 500 }}>{m.full_name}</td>
-              <td>{m.username}</td>
-              <td>{m.email}</td>
-              <td><span className={`${styles.badge} ${styles[`badge-${m.role}`]}`}>{m.role}</span></td>
-              <td><span className={`${styles.badge} ${m.membership_status === 'active' ? styles['badge-active'] : styles['badge-inactive']}`}>{m.membership_status}</span></td>
-              <td>{formatDate(m.membership_expires_at)}</td>
-              <td>
-                <button className={styles['action-btn']} onClick={() => handleRenewMembership(m.id)}>Renew</button>
-                {isAdmin && (
-                  <button className={`${styles['action-btn']} ${styles.danger}`} onClick={() => handleDeactivate(m.id)}>Deactivate</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h3 style={{ marginBottom: 'var(--space-4)' }}>Registered Members ({displayedMembers.length})</h3>
+      <AdminTable
+        data={displayedMembers}
+        empty="No members found."
+        columns={[
+          { key: 'id', header: 'ID' },
+          { key: 'full_name', header: 'Name', render: m => <span style={{ fontWeight: 500 }}>{m.full_name}</span> },
+          { key: 'username', header: 'Username' },
+          { key: 'email', header: 'Email' },
+          { key: 'role', header: 'Role', render: m => <span className={`${styles.badge} ${styles[`badge-${m.role}`]}`}>{m.role}</span> },
+          { key: 'membership_status', header: 'Status', render: m => <span className={`${styles.badge} ${m.membership_status === 'active' ? styles['badge-active'] : styles['badge-inactive']}`}>{m.membership_status}</span> },
+          { key: 'membership_expires_at', header: 'Expires', render: m => formatDate(m.membership_expires_at) },
+          { key: 'actions', header: 'Actions', render: m => (
+            <>
+              <button className={styles['icon-btn']} onClick={() => handleRenewMembership(m.id)} title="Renew membership" aria-label="Renew membership">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+              </button>
+              {isAdmin && (
+                <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => handleDeactivate(m.id)} title="Deactivate member" aria-label="Deactivate member">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </button>
+              )}
+            </>
+          )},
+        ]}
+      />
 
       {showForm && <MemberFormModal onSave={handleCreate} onClose={() => setShowForm(false)} />}
     </>
@@ -658,38 +805,170 @@ function MemberFormModal({ onSave, onClose }) {
     onSave({ username, email, full_name: fullName, password, role });
   }
 
+  const req = <span style={{ color: '#dc2626', marginLeft: '2px' }} aria-hidden="true">*</span>;
+
+  return (
+    <div className={styles['modal-overlay']} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-1)' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 'var(--fs-xl)', color: 'var(--color-espresso)' }}>Add New Member</h2>
+            <p style={{ margin: '4px 0 0', fontSize: 'var(--fs-xs)', color: 'var(--color-charcoal-light)' }}>
+              Fields marked <span style={{ color: '#dc2626' }}>*</span> are required
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-charcoal-light)', padding: '4px', borderRadius: 'var(--radius-sm)', lineHeight: 1, marginTop: '-2px' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid var(--color-divider)', margin: 'var(--space-4) 0' }} />
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+
+          {/* Full Name */}
+          <div className="form-group" style={{ margin: 0 }}>
+            <label htmlFor="mem-name" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+              Full Name{req}
+            </label>
+            <input
+              id="mem-name"
+              className="input"
+              placeholder="e.g. Jane Doe"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+
+          {/* Username + Email row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label htmlFor="mem-user" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+                Username{req}
+              </label>
+              <input
+                id="mem-user"
+                className="input"
+                placeholder="e.g. jdoe"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label htmlFor="mem-email" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+                Email{req}
+              </label>
+              <input
+                id="mem-email"
+                type="email"
+                className="input"
+                placeholder="e.g. jane@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Password + Role row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label htmlFor="mem-pass" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+                Password{req}
+              </label>
+              <input
+                id="mem-pass"
+                type="password"
+                className="input"
+                placeholder="Min. 4 characters"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={4}
+              />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label htmlFor="mem-role" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+                Role{req}
+              </label>
+              <select id="mem-role" className="input" value={role} onChange={e => setRole(e.target.value)} required>
+                <option value="member">Member</option>
+                <option value="librarian">Librarian</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid var(--color-divider)', margin: 'var(--space-2) 0 0' }} />
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary">Create Member</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUserId, setIssueUserId, onSubmit, onClose }) {
   return (
     <div className={styles['modal-overlay']} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <h2>Add New Member</h2>
-        <form className={styles['modal-form']} onSubmit={handleSubmit}>
+        <h2>Issue a Book</h2>
+        <form className={styles['modal-form']} onSubmit={onSubmit}>
           <div className="form-group">
-            <label htmlFor="mem-name" className="form-label">Full Name</label>
-            <input id="mem-name" className="input" value={fullName} onChange={e => setFullName(e.target.value)} required />
+            <label htmlFor="modal-issue-book" className="form-label">Book</label>
+            <select id="modal-issue-book" className="input" value={issueBookId} onChange={e => setIssueBookId(e.target.value)} required>
+              <option value="">Select a book…</option>
+              {books.filter(b => b.available_copies > 0).map(b => (
+                <option key={b.id} value={b.id}>{b.title} ({b.available_copies} available)</option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
-            <label htmlFor="mem-user" className="form-label">Username</label>
-            <input id="mem-user" className="input" value={username} onChange={e => setUsername(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="mem-email" className="form-label">Email</label>
-            <input id="mem-email" type="email" className="input" value={email} onChange={e => setEmail(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="mem-pass" className="form-label">Password</label>
-            <input id="mem-pass" type="password" className="input" value={password} onChange={e => setPassword(e.target.value)} required minLength={4} />
-          </div>
-          <div className="form-group">
-            <label htmlFor="mem-role" className="form-label">Role</label>
-            <select id="mem-role" className="input" value={role} onChange={e => setRole(e.target.value)}>
-              <option value="member">Member</option>
-              <option value="librarian">Librarian</option>
-              <option value="admin">Admin</option>
+            <label htmlFor="modal-issue-member" className="form-label">Member</label>
+            <select id="modal-issue-member" className="input" value={issueUserId} onChange={e => setIssueUserId(e.target.value)} required>
+              <option value="">Select a member…</option>
+              {members.map(m => <option key={m.id} value={m.id}>{m.full_name} ({m.username})</option>)}
             </select>
           </div>
           <div className={styles['modal-actions']}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Create Member</button>
+            <button type="submit" className="btn btn-primary">Issue Book</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CategoryFormModal({ newName, setNewName, onSubmit, onClose }) {
+  return (
+    <div className={styles['modal-overlay']} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <h2>Add New Category</h2>
+        <form className={styles['modal-form']} onSubmit={onSubmit}>
+          <div className="form-group">
+            <label htmlFor="modal-cat-name" className="form-label">Category Name</label>
+            <input id="modal-cat-name" className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Science Fiction…" required autoFocus />
+          </div>
+          <div className={styles['modal-actions']}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary">Add Category</button>
           </div>
         </form>
       </div>
@@ -705,6 +984,9 @@ function CategoriesTab({ isAdmin }) {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
   const [newName, setNewName] = useState('');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('az_name');
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => { loadCats(); }, []);
 
@@ -748,7 +1030,7 @@ function CategoriesTab({ isAdmin }) {
     try {
       await api.post('/categories', { name: newName.trim() });
       setMsg({ type: 'success', text: 'Category created!' });
-      setNewName(''); loadCats();
+      setNewName(''); setShowForm(false); loadCats();
     } catch (err) { setMsg({ type: 'error', text: err.message }); }
   }
 
@@ -758,45 +1040,104 @@ function CategoriesTab({ isAdmin }) {
     catch (err) { setMsg({ type: 'error', text: err.message }); }
   }
 
+  async function handleEdit(c) {
+    const updated = prompt('Enter new category name:', c.name);
+    if (!updated || !updated.trim() || updated.trim() === c.name) return;
+    try {
+      await api.put(`/categories/${c.id}`, { name: updated.trim() });
+      setMsg({ type: 'success', text: 'Category updated!' });
+      loadCats();
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message || 'Failed to update category.' });
+    }
+  }
+
   if (loading) return <div className={styles['empty-state']}><p>Loading…</p></div>;
+
+  function filterAndSortCategories() {
+    let filtered = categories;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(c =>
+        String(c.id).includes(q) ||
+        (c.name && c.name.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_name') return (a.name || '').localeCompare(b.name || '');
+      if (sort === 'za_name') return (b.name || '').localeCompare(a.name || '');
+      if (sort === 'books_high') return (b.book_count || 0) - (a.book_count || 0);
+      if (sort === 'books_low') return (a.book_count || 0) - (b.book_count || 0);
+      return 0;
+    });
+  }
+
+  const displayedCategories = filterAndSortCategories();
 
   return (
     <>
       {msg && <div className={`${styles.msg} ${styles[`msg-${msg.type}`]}`}>{msg.text}</div>}
 
       <CSVToolbar
-        count={categories.length}
+        count={displayedCategories.length}
         label="categories"
         onExport={handleExportCSV}
         onImport={handleImportCSV}
         onTemplate={handleDownloadTemplate}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search category name..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'az_name', label: 'Name (A-Z)' },
+          { value: 'za_name', label: 'Name (Z-A)' },
+          { value: 'books_high', label: 'Most Books' },
+          { value: 'books_low', label: 'Fewest Books' },
+        ]}
+      >
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add Category</button>
+      </CSVToolbar>
+
+      <h3 style={{ marginBottom: 'var(--space-4)' }}>Book Categories ({displayedCategories.length})</h3>
+      <AdminTable
+        data={displayedCategories}
+        empty="No categories found."
+        columns={[
+          { key: 'id', header: 'ID' },
+          { key: 'name', header: 'Name', render: c => <span style={{ fontWeight: 500 }}>{c.name}</span> },
+          { key: 'book_count', header: 'Books', render: c => c.book_count || 0 },
+          { key: 'actions', header: 'Actions', render: c => (
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <button className={styles['icon-btn']} onClick={() => handleEdit(c)} title="Edit category" aria-label="Edit category">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              {isAdmin && (
+                <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => handleDelete(c.id)} title="Delete category" aria-label="Delete category">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+          )},
+        ]}
       />
 
-      <form onSubmit={handleCreate} style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-6)', alignItems: 'flex-end' }}>
-        <div className="form-group" style={{ flex: 1 }}>
-          <label htmlFor="new-cat" className="form-label">New Category</label>
-          <input id="new-cat" className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Category name…" />
-        </div>
-        <button type="submit" className="btn btn-primary">Add</button>
-      </form>
-
-      <table className={styles['data-table']}>
-        <thead><tr><th>ID</th><th>Name</th><th>Books</th><th>Actions</th></tr></thead>
-        <tbody>
-          {categories.map(c => (
-            <tr key={c.id}>
-              <td>{c.id}</td>
-              <td style={{ fontWeight: 500 }}>{c.name}</td>
-              <td>{c.book_count || 0}</td>
-              <td>
-                {isAdmin && (
-                  <button className={`${styles['action-btn']} ${styles.danger}`} onClick={() => handleDelete(c.id)}>Delete</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {showForm && (
+        <CategoryFormModal
+          newName={newName}
+          setNewName={setNewName}
+          onSubmit={handleCreate}
+          onClose={() => setShowForm(false)}
+        />
+      )}
     </>
   );
 }
@@ -808,6 +1149,8 @@ function ReservationsTab() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('newest');
 
   async function load() {
     setLoading(true);
@@ -871,8 +1214,28 @@ function ReservationsTab() {
 
   if (loading) return <div className={styles['empty-state']}><p>Loading…</p></div>;
 
-  const activeReservations = reservations.filter(r => r.status === 'waiting' || r.status === 'ready');
-  const pastReservations = reservations.filter(r => r.status === 'fulfilled' || r.status === 'cancelled');
+  function filterAndSortRes(list) {
+    let filtered = list;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(r =>
+        String(r.id).includes(q) ||
+        (r.book_title && r.book_title.toLowerCase().includes(q)) ||
+        (r.user_name && r.user_name.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_book') return (a.book_title || '').localeCompare(b.book_title || '');
+      if (sort === 'za_book') return (b.book_title || '').localeCompare(a.book_title || '');
+      if (sort === 'az_member') return (a.user_name || '').localeCompare(b.user_name || '');
+      if (sort === 'za_member') return (b.user_name || '').localeCompare(a.user_name || '');
+      if (sort === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    });
+  }
+
+  const activeReservations = filterAndSortRes(reservations.filter(r => r.status === 'waiting' || r.status === 'ready'));
+  const pastReservations = filterAndSortRes(reservations.filter(r => r.status === 'fulfilled' || r.status === 'cancelled'));
 
   return (
     <>
@@ -884,94 +1247,61 @@ function ReservationsTab() {
         onExport={handleExportCSV}
         onImport={handleImportCSV}
         onTemplate={handleDownloadTemplate}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search book, member..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'newest', label: 'Newest First' },
+          { value: 'oldest', label: 'Oldest First' },
+          { value: 'az_book', label: 'Book Title (A-Z)' },
+          { value: 'za_book', label: 'Book Title (Z-A)' },
+          { value: 'az_member', label: 'Member Name (A-Z)' },
+          { value: 'za_member', label: 'Member Name (Z-A)' },
+        ]}
       />
 
       <h3 style={{ marginBottom: 'var(--space-4)' }}>Active Waitlists ({activeReservations.length})</h3>
-      {activeReservations.length === 0 ? (
-        <div className={styles['empty-state']}><p>No active reservations on the waitlist.</p></div>
-      ) : (
-        <table className={styles['data-table']}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Book</th>
-              <th>Member Name</th>
-              <th>Joined Waitlist</th>
-              <th>Queue Position</th>
-              <th>Status</th>
-              <th>Ready Since</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activeReservations.map(r => (
-              <tr key={r.id}>
-                <td>{r.id}</td>
-                <td style={{ fontWeight: 500 }}>{r.book_title}</td>
-                <td>{r.user_name}</td>
-                <td>{formatDate(r.created_at)}</td>
-                <td>
-                  {r.status === 'waiting' ? (
-                    <span style={{ fontWeight: 600, color: 'var(--color-espresso)' }}>
-                      #{r.queue_position} in line
-                    </span>
-                  ) : (
-                    <span style={{ color: '#16a34a', fontWeight: 600 }}>Ready for pickup</span>
-                  )}
-                </td>
-                <td>
-                  <span className={`${styles.badge} ${r.status === 'ready' ? styles['badge-active'] : styles['badge-waiting']}`}>
-                    {r.status}
-                  </span>
-                </td>
-                <td>{r.ready_at ? formatDate(r.ready_at) : '—'}</td>
-                <td>
-                  {r.status === 'ready' ? (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleIssueBook(r)}
-                    >
-                      Issue Book
-                    </button>
-                  ) : (
-                    <span style={{ color: 'var(--color-charcoal-light)', fontStyle: 'italic', fontSize: '0.85rem' }}>Waiting</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <AdminTable
+          data={activeReservations}
+          empty="No active reservations."
+          columns={[
+            { key: 'id', header: 'ID' },
+            { key: 'book_title', header: 'Book', render: r => <span style={{ fontWeight: 500 }}>{r.book_title}</span> },
+            { key: 'user_name', header: 'Member Name' },
+            { key: 'created_at', header: 'Joined Waitlist', render: r => formatDate(r.created_at) },
+            { key: 'queue_position', header: 'Queue Position', render: r => r.status === 'waiting'
+              ? <span style={{ fontWeight: 600, color: 'var(--color-espresso)' }}>#{r.queue_position} in line</span>
+              : <span style={{ color: '#16a34a', fontWeight: 600 }}>Ready for pickup</span>
+            },
+            { key: 'status', header: 'Status', render: r => (
+              <span className={`${styles.badge} ${r.status === 'ready' ? styles['badge-active'] : styles['badge-waiting']}`}>{r.status}</span>
+            )},
+            { key: 'ready_at', header: 'Ready Since', render: r => r.ready_at ? formatDate(r.ready_at) : '—' },
+            { key: 'actions', header: 'Actions', render: r => r.status === 'ready'
+              ? <button className="btn btn-primary btn-sm" onClick={() => handleIssueBook(r)}>Issue Book</button>
+              : <span style={{ color: 'var(--color-charcoal-light)', fontStyle: 'italic', fontSize: '0.85rem' }}>Waiting</span>
+            },
+          ]}
+        />
 
       {pastReservations.length > 0 && (
         <div style={{ marginTop: 'var(--space-8)' }}>
           <h3 style={{ marginBottom: 'var(--space-4)', color: 'var(--color-espresso-light)' }}>Reservation History</h3>
-          <table className={styles['data-table']}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Book</th>
-                <th>Member Name</th>
-                <th>Joined Waitlist</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pastReservations.slice(0, 20).map(r => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.book_title}</td>
-                  <td>{r.user_name}</td>
-                  <td>{formatDate(r.created_at)}</td>
-                  <td>
-                    <span className={`${styles.badge} ${r.status === 'fulfilled' ? styles['badge-active'] : styles['badge-inactive']}`}>
-                      {r.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <AdminTable
+            data={pastReservations.slice(0, 20)}
+            empty="No reservation history."
+            columns={[
+              { key: 'id', header: 'ID' },
+              { key: 'book_title', header: 'Book' },
+              { key: 'user_name', header: 'Member Name' },
+              { key: 'created_at', header: 'Joined Waitlist', render: r => formatDate(r.created_at) },
+              { key: 'status', header: 'Status', render: r => (
+                <span className={`${styles.badge} ${r.status === 'fulfilled' ? styles['badge-active'] : styles['badge-inactive']}`}>{r.status}</span>
+              )},
+            ]}
+          />
         </div>
       )}
     </>
@@ -985,6 +1315,10 @@ function FinesTab() {
   const [fines, setFines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('highest');
 
   useEffect(() => {
     loadFines();
@@ -1010,7 +1344,45 @@ function FinesTab() {
     }
   }
 
+  async function handleSaveAmount(txnId) {
+    const val = parseFloat(editAmount);
+    if (isNaN(val) || val < 0) {
+      setMsg({ type: 'error', text: 'Please enter a valid amount.' });
+      return;
+    }
+    try {
+      await api.patch(`/fines/${txnId}/amount`, { fine_amount: val });
+      setMsg({ type: 'success', text: 'Fine amount updated.' });
+      setEditingId(null);
+      loadFines();
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message });
+    }
+  }
+
   if (loading) return <div className={styles['empty-state']}><p>Loading…</p></div>;
+
+  function filterAndSortFines() {
+    let filtered = fines;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(f =>
+        String(f.id).includes(q) ||
+        (f.book_title && f.book_title.toLowerCase().includes(q)) ||
+        (f.user_name && f.user_name.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_book') return (a.book_title || '').localeCompare(b.book_title || '');
+      if (sort === 'za_book') return (b.book_title || '').localeCompare(a.book_title || '');
+      if (sort === 'az_member') return (a.user_name || '').localeCompare(b.user_name || '');
+      if (sort === 'za_member') return (b.user_name || '').localeCompare(a.user_name || '');
+      if (sort === 'lowest') return (a.fine_amount || 0) - (b.fine_amount || 0);
+      return (b.fine_amount || 0) - (a.fine_amount || 0); // highest
+    });
+  }
+
+  const displayedFines = filterAndSortFines();
 
   function handleExportCSV() {
     if (fines.length === 0) return;
@@ -1027,18 +1399,32 @@ function FinesTab() {
       {msg && <div className={`${styles.msg} ${styles[`msg-${msg.type}`]}`}>{msg.text}</div>}
 
       <CSVToolbar
-        count={fines.length}
+        count={displayedFines.length}
         label="pending fines"
         onExport={handleExportCSV}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search member, book..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'highest', label: 'Highest Fine' },
+          { value: 'lowest', label: 'Lowest Fine' },
+          { value: 'az_book', label: 'Book Title (A-Z)' },
+          { value: 'za_book', label: 'Book Title (Z-A)' },
+          { value: 'az_member', label: 'Member Name (A-Z)' },
+          { value: 'za_member', label: 'Member Name (Z-A)' },
+        ]}
       />
 
-      <h3 style={{ marginBottom: 'var(--space-4)' }}>Pending Fines ({fines.length})</h3>
-      {fines.length === 0 ? (
-        <div className={styles['empty-state']}><p>No pending fines.</p></div>
+      <h3 style={{ marginBottom: 'var(--space-4)' }}>Pending Fines ({displayedFines.length})</h3>
+      {displayedFines.length === 0 ? (
+        <div className={styles['empty-state']}><p>No pending fines found.</p></div>
       ) : (
         <table className={styles['data-table']}>
           <thead>
             <tr>
+              <th>Sr. No.</th>
               <th>Txn ID</th>
               <th>Book</th>
               <th>Member Name</th>
@@ -1049,18 +1435,79 @@ function FinesTab() {
             </tr>
           </thead>
           <tbody>
-            {fines.map(f => (
+            {displayedFines.map((f, i) => (
               <tr key={f.id}>
+                <td style={{ color: 'var(--color-charcoal-light)', width: 40 }}>{i + 1}</td>
                 <td>{f.id}</td>
                 <td style={{ fontWeight: 500 }}>{f.book_title}</td>
                 <td>{f.user_name}</td>
                 <td>{formatDate(f.due_date)}</td>
                 <td>{formatDate(f.returned_at)}</td>
-                <td style={{ color: '#dc2626', fontWeight: 600 }}>₹{f.fine_amount}</td>
                 <td>
-                  <button className="btn btn-primary btn-sm" onClick={() => handlePayFine(f.id)}>
-                    Pay
-                  </button>
+                  {editingId === f.id ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: '#dc2626', fontWeight: 600 }}>₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={editAmount}
+                        onChange={e => setEditAmount(e.target.value)}
+                        className={styles['fine-input']}
+                        autoFocus
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleSaveAmount(f.id);
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <span style={{ color: '#dc2626', fontWeight: 600 }}>₹{f.fine_amount}</span>
+                  )}
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {editingId === f.id ? (
+                      <>
+                        <button
+                          className={styles['icon-btn']}
+                          onClick={() => handleSaveAmount(f.id)}
+                          title="Save amount"
+                          aria-label="Save fine amount"
+                          style={{ color: 'var(--color-success)', borderColor: 'var(--color-success)' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </button>
+                        <button
+                          className={styles['icon-btn']}
+                          onClick={() => setEditingId(null)}
+                          title="Cancel"
+                          aria-label="Cancel edit"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className={styles['icon-btn']}
+                        onClick={() => { setEditingId(f.id); setEditAmount(String(f.fine_amount)); }}
+                        title="Edit fine amount"
+                        aria-label="Edit fine amount"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    )}
+                    <button className="btn btn-primary btn-sm" onClick={() => handlePayFine(f.id)}>
+                      Pay
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -1079,6 +1526,8 @@ function LogBookTab() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('newest');
 
   async function loadLogs(p) {
     setLoading(true);
@@ -1137,22 +1586,55 @@ function LogBookTab() {
 
   if (loading && logs.length === 0) return <div className={styles['empty-state']}><p>Loading Activity Log…</p></div>;
 
+  function filterAndSortLogs() {
+    let filtered = logs;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(l =>
+        String(l.id).includes(q) ||
+        (l.user_name && l.user_name.toLowerCase().includes(q)) ||
+        (l.action && l.action.toLowerCase().includes(q)) ||
+        (l.details && l.details.toLowerCase().includes(q))
+      );
+    }
+    return [...filtered].sort((a, b) => {
+      if (sort === 'az_user') return (a.user_name || '').localeCompare(b.user_name || '');
+      if (sort === 'za_user') return (b.user_name || '').localeCompare(a.user_name || '');
+      if (sort === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0); // newest
+    });
+  }
+
+  const displayedLogs = filterAndSortLogs();
+
   return (
     <>
       <CSVToolbar
-        count={logs.length}
+        count={displayedLogs.length}
         label="log entries (this page)"
         onExport={handleExportCSV}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search logs, user, details..."
+        sort={sort}
+        onSortChange={setSort}
+        sortOptions={[
+          { value: 'newest', label: 'Newest First' },
+          { value: 'oldest', label: 'Oldest First' },
+          { value: 'az_user', label: 'User (A-Z)' },
+          { value: 'za_user', label: 'User (Z-A)' },
+        ]}
       />
 
-      <h3 style={{ marginBottom: 'var(--space-4)', color: 'var(--color-espresso)' }}>System Audit Log</h3>
+      <h3 style={{ marginBottom: 'var(--space-4)', color: 'var(--color-espresso)' }}>System Audit Log ({displayedLogs.length})</h3>
 
-      {logs.length === 0 ? (
+      {displayedLogs.length === 0 ? (
         <div className={styles['empty-state']}><p>No activities recorded in the log book yet.</p></div>
       ) : (
         <table className={styles['data-table']}>
           <thead>
             <tr>
+              <th>Sr. No.</th>
               <th>ID</th>
               <th>User</th>
               <th>Action</th>
@@ -1161,8 +1643,9 @@ function LogBookTab() {
             </tr>
           </thead>
           <tbody>
-            {logs.map(log => (
+            {displayedLogs.map((log, i) => (
               <tr key={log.id}>
+                <td style={{ color: 'var(--color-charcoal-light)', width: 40 }}>{(page - 1) * 20 + i + 1}</td>
                 <td>{log.id}</td>
                 <td>{log.user_name}</td>
                 <td><span className={styles.badge}>{getActionLabel(log.action)}</span></td>
@@ -1177,21 +1660,28 @@ function LogBookTab() {
       {totalPages > 1 && (
         <div style={{ marginTop: 'var(--space-8)', display: 'flex', justifyContent: 'center', gap: '16px', alignItems: 'center' }}>
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn btn-ghost btn-sm"
             onClick={() => setPage(p => Math.max(p - 1, 1))}
             disabled={page === 1}
           >
-            ← Previous
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Previous
           </button>
-          <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)', fontWeight: 600 }}>
+          <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)' }}>
             Page {page} of {totalPages}
           </span>
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn btn-ghost btn-sm"
             onClick={() => setPage(p => Math.min(p + 1, totalPages))}
             disabled={page === totalPages}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
           >
-            Next →
+            Next
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14" /><polyline points="12 5 19 12 12 19" />
+            </svg>
           </button>
         </div>
       )}

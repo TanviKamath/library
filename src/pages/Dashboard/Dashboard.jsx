@@ -5,6 +5,7 @@ import api from '../../api/client';
 import { BookCard } from '../../components/BookCard';
 import Lanyard from '../../components/Lanyard/Lanyard';
 import { Modal } from '../../components/Modal';
+import OverdueStamp from '../../components/OverdueStamp/OverdueStamp';
 import { getProxiedImageUrl } from '../../utils/image';
 import styles from './Dashboard.module.css';
 
@@ -111,8 +112,11 @@ function MemberDashboard() {
       <div className={styles.section}>
         <div className={styles['section-header']}>
           <h2>Currently Borrowed</h2>
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/app/my-books')}>
-            View All →
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/app/my-books')} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            View All
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
           </button>
         </div>
         {active.length === 0 ? (
@@ -269,9 +273,10 @@ function StaffDashboard() {
             <div className={styles['stat-label']}>Issued Books</div>
             <div className={styles['stat-value']}>{stats.issuedBooks}</div>
           </div>
-          <div className={`${styles['stat-card']} ${stats.overdueBooks > 0 ? styles.accent : ''}`}>
+          <div className={styles['stat-card']} style={{ position: 'relative', overflow: 'hidden' }}>
             <div className={styles['stat-label']}>Overdue</div>
             <div className={styles['stat-value']}>{stats.overdueBooks}</div>
+            {stats.overdueBooks > 0 && <OverdueStamp />}
           </div>
           <div className={`${styles['stat-card']} ${stats.dueToday > 0 ? styles.accent : ''}`}>
             <div className={styles['stat-label']}>Due Today</div>
@@ -304,19 +309,26 @@ function StaffDashboard() {
             <div className={styles['section-header']}>
               <h2>Popular Books</h2>
             </div>
-            <div className={styles['activity-list']}>
-              {analytics.popularBooks.map((b, i) => (
-                <div key={i} className={styles['activity-item']}>
-                  <span style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-lg)', color: 'var(--color-terracotta)', fontWeight: 600, width: 28 }}>
-                    {i + 1}
-                  </span>
-                  <div className={styles['activity-content']}>
-                    <div className={styles['activity-text']}><strong>{b.title}</strong></div>
-                    <div className={styles['activity-date']}>{b.count} borrows</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <table className={styles['due-table']}>
+              <thead>
+                <tr>
+                  <th style={{ width: 50, textAlign: 'center' }}>#</th>
+                  <th>Book Title</th>
+                  <th style={{ textAlign: 'right' }}>Borrows</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.popularBooks.map((b, i) => (
+                  <tr key={i}>
+                    <td style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-md)', color: 'var(--color-terracotta)', fontWeight: 600, textAlign: 'center' }}>
+                      {i + 1}
+                    </td>
+                    <td style={{ fontWeight: 500 }}>{b.title}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-charcoal-light)', fontWeight: 600 }}>{b.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
@@ -325,25 +337,37 @@ function StaffDashboard() {
           <div className={styles.section}>
             <div className={styles['section-header']}>
               <h2>Recent Activity</h2>
-              <button className="btn btn-ghost btn-sm" onClick={() => navigate('/app/admin')}>
-                View All →
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate('/app/admin')} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                View All
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
               </button>
             </div>
-            <div className={styles['activity-list']}>
-              {analytics.recentActivity.map(a => (
-                <div key={a.id} className={styles['activity-item']}>
-                  <span className={`${styles['activity-dot']} ${styles[a.status]}`} />
-                  <div className={styles['activity-content']}>
-                    <div className={styles['activity-text']}>
-                      <strong>{a.user_name}</strong> — {a.book_title}
-                    </div>
-                    <div className={styles['activity-date']}>
-                      {formatDate(a.date)} · <span style={{ textTransform: 'capitalize' }}>{a.status}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <table className={styles['due-table']}>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Book</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.recentActivity.map(a => (
+                  <tr key={a.id}>
+                    <td style={{ fontWeight: 500 }}>{a.user_name}</td>
+                    <td style={{ color: 'var(--color-charcoal)' }}>{a.book_title}</td>
+                    <td style={{ color: 'var(--color-charcoal-light)', fontSize: 'var(--fs-xs)' }}>{formatDate(a.date)}</td>
+                    <td>
+                      <span className={`${styles.badge} ${a.status === 'active' ? styles['badge-active'] : a.status === 'returned' ? styles['badge-info'] : styles['badge-overdue']}`}>
+                        {a.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

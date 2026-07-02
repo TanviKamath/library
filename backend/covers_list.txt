@@ -1,0 +1,313 @@
+1	Alice's Adventures in Wonderland	https://covers.openlibrary.org/b/id/10527843-L.jpg
+2	Frankenstein; or, The Modern Prometheus	https://covers.openlibrary.org/b/id/12356249-L.jpg
+3	The Wonderful Wizard of Oz	https://covers.openlibrary.org/b/id/552443-L.jpg
+4	Dracula	https://covers.openlibrary.org/b/id/12216503-L.jpg
+5	The Time Machine	https://covers.openlibrary.org/b/id/9009316-L.jpg
+6	The Lost World	https://covers.openlibrary.org/b/id/8231444-L.jpg
+7	Brave New World	https://covers.openlibrary.org/b/id/8231823-L.jpg
+8	The Jewel of Seven Stars	https://covers.openlibrary.org/b/id/2760301-L.jpg
+9	The Iron Heel	https://covers.openlibrary.org/b/id/8243314-L.jpg
+10	Flatland	https://covers.openlibrary.org/b/id/10069547-L.jpg
+11	The Invisible Man	https://covers.openlibrary.org/b/id/6419199-L.jpg
+12	Nineteen Eighty-Four	https://covers.openlibrary.org/b/id/9267242-L.jpg
+13	The Princess and Curdie	https://covers.openlibrary.org/b/id/14357835-L.jpg
+14	The War of the Worlds	https://covers.openlibrary.org/b/id/36314-L.jpg
+15	A Princess of Mars	https://covers.openlibrary.org/b/id/207226-L.jpg
+16	The Napoleon of Notting Hill	https://covers.openlibrary.org/b/id/6980094-L.jpg
+17	The Last Man	https://covers.openlibrary.org/b/id/882662-L.jpg
+18	Le Tour du Monde en Quatre-Vingts Jours	https://covers.openlibrary.org/b/id/6976035-L.jpg
+19	The warlord of Mars #3	https://covers.openlibrary.org/b/id/207141-L.jpg
+20	Vingt mille lieues sous les mers	https://covers.openlibrary.org/b/id/6573517-L.jpg
+21	The Strange Case of Dr. Jekyll and Mr. Hyde	https://covers.openlibrary.org/b/id/295773-L.jpg
+22	The description of a new world	https://covers.openlibrary.org/b/id/103235-L.jpg
+23	News from nowhere, or, An epoch of rest, being some chapters from a utopian romance	https://covers.openlibrary.org/b/id/338173-L.jpg
+24	The Poison Belt	https://covers.openlibrary.org/b/id/5788361-L.jpg
+25	The Gods of Mars	https://covers.openlibrary.org/b/id/207132-L.jpg
+26	The Chessmen of Mars	https://covers.openlibrary.org/b/id/1930755-L.jpg
+27	The Machine Stops	https://covers.openlibrary.org/b/id/7793883-L.jpg
+28	The Island of Dr. Moreau	https://covers.openlibrary.org/b/id/968312-L.jpg
+29	Gullivar of Mars	https://covers.openlibrary.org/b/id/573770-L.jpg
+30	After London	https://covers.openlibrary.org/b/id/2841895-L.jpg
+31	The Coming Race	https://covers.openlibrary.org/b/id/2751882-L.jpg
+32	Fahrenheit 451	https://covers.openlibrary.org/b/id/12993656-L.jpg
+33	The wood beyond the world	https://covers.openlibrary.org/b/id/5895767-L.jpg
+34	The king of the Golden River; or, The black brothers	https://covers.openlibrary.org/b/id/5884126-L.jpg
+35	The Moon Pool	https://covers.openlibrary.org/b/id/9317374-L.jpg
+36	At the Earth's Core	https://covers.openlibrary.org/b/id/9317372-L.jpg
+37	In the days of the comet	https://covers.openlibrary.org/b/id/5783892-L.jpg
+38	Мы	https://covers.openlibrary.org/b/id/5484189-L.jpg
+39	De la terre à la lune	https://covers.openlibrary.org/b/id/5943556-L.jpg
+40	Thuvia, Maid of Mars	https://covers.openlibrary.org/b/id/284442-L.jpg
+41	Voyage au Centre de la Terre	https://covers.openlibrary.org/b/id/5890987-L.jpg
+42	When the Sleeper Awakes	https://covers.openlibrary.org/b/id/574886-L.jpg
+43	The food of the gods and how it came to earth	https://covers.openlibrary.org/b/id/314687-L.jpg
+44	The Beasts of Tarzan (Classic Ace SF, F-203)	https://covers.openlibrary.org/b/id/2421421-L.jpg
+45	The Handmaid's Tale	https://covers.openlibrary.org/b/id/8231851-L.jpg
+46	It Can't Happen Here	https://covers.openlibrary.org/b/id/12719018-L.jpg
+47	R.U.R. and The insect play	https://covers.openlibrary.org/b/id/4291026-L.jpg
+48	The Hunger Games	https://covers.openlibrary.org/b/id/12646537-L.jpg
+49	A Fighting Man Of Mars	https://covers.openlibrary.org/b/id/13898460-L.jpg
+50	The Martian Chronicles	https://covers.openlibrary.org/b/id/9346537-L.jpg
+51	Pride and Prejudice	https://covers.openlibrary.org/b/id/14348537-L.jpg
+52	A Christmas Carol	https://covers.openlibrary.org/b/id/12875748-L.jpg
+53	The Picture of Dorian Gray	https://covers.openlibrary.org/b/id/14314858-L.jpg
+54	Adventures of Huckleberry Finn	https://covers.openlibrary.org/b/id/8157718-L.jpg
+55	The Scarlet Letter	https://covers.openlibrary.org/b/id/5654516-L.jpg
+56	Robinson Crusoe	https://covers.openlibrary.org/b/id/368541-L.jpg
+57	Oliver Twist	https://covers.openlibrary.org/b/id/13300802-L.jpg
+58	Sense and Sensibility	https://covers.openlibrary.org/b/id/9278292-L.jpg
+59	A Tale of Two Cities	https://covers.openlibrary.org/b/id/13301713-L.jpg
+60	Treasure Island	https://covers.openlibrary.org/b/id/13859660-L.jpg
+61	Little Women	https://covers.openlibrary.org/b/id/8775559-L.jpg
+62	Macbeth	https://covers.openlibrary.org/b/id/872432-L.jpg
+63	The Call of the Wild	https://covers.openlibrary.org/b/id/12393037-L.jpg
+64	The Secret Garden	https://covers.openlibrary.org/b/id/12622062-L.jpg
+65	Don Quijote de la Mancha	https://covers.openlibrary.org/b/id/14428305-L.jpg
+66	Madame Bovary	https://covers.openlibrary.org/b/id/12993424-L.jpg
+67	The Art of War	https://covers.openlibrary.org/b/id/4849549-L.jpg
+68	Great Expectations	https://covers.openlibrary.org/b/id/13322313-L.jpg
+69	Julius Caesar	https://covers.openlibrary.org/b/id/7901303-L.jpg
+70	The Prince	https://covers.openlibrary.org/b/id/12726168-L.jpg
+71	La Divina Commedia	https://covers.openlibrary.org/b/id/11621024-L.jpg
+72	Анна Каренина	https://covers.openlibrary.org/b/id/2560652-L.jpg
+73	The Hound of the Baskervilles	https://covers.openlibrary.org/b/id/8063264-L.jpg
+74	Anne of Green Gables	https://covers.openlibrary.org/b/id/14641084-L.jpg
+75	Преступление и наказание	https://covers.openlibrary.org/b/id/9411873-L.jpg
+76	Jane Eyre	https://covers.openlibrary.org/b/id/8235363-L.jpg
+77	Three Men in a Boat (to say nothing of the dog)	https://covers.openlibrary.org/b/id/8243006-L.jpg
+78	The Adventures of Sherlock Holmes [12 stories]	https://covers.openlibrary.org/b/id/6717853-L.jpg
+79	The Taming of the Shrew	https://covers.openlibrary.org/b/id/7889534-L.jpg
+80	Moby Dick	https://covers.openlibrary.org/b/id/10544254-L.jpg
+81	Moll Flanders	https://covers.openlibrary.org/b/id/12997559-L.jpg
+82	Les Trois Mousquetaires	https://covers.openlibrary.org/b/id/11929973-L.jpg
+83	Candide	https://covers.openlibrary.org/b/id/12736044-L.jpg
+84	Narrative of the life of Frederick Douglass	https://covers.openlibrary.org/b/id/8247724-L.jpg
+85	Twelve years a slave	https://covers.openlibrary.org/b/id/14856045-L.jpg
+86	Hard Times	https://covers.openlibrary.org/b/id/8236916-L.jpg
+87	The Legend of Sleepy Hollow	https://covers.openlibrary.org/b/id/8243083-L.jpg
+88	Troilus and Cressida	https://covers.openlibrary.org/b/id/8789523-L.jpg
+89	Romeo and Juliet	https://covers.openlibrary.org/b/id/8257991-L.jpg
+90	The Railway Children	https://covers.openlibrary.org/b/id/13241123-L.jpg
+91	The Moonstone	https://covers.openlibrary.org/b/id/8237041-L.jpg
+92	Five Children and It	https://covers.openlibrary.org/b/id/28174-L.jpg
+93	Antony and Cleopatra	https://covers.openlibrary.org/b/id/8222096-L.jpg
+94	Kim	https://covers.openlibrary.org/b/id/1053011-L.jpg
+95	The Adventures of Tom Sawyer	https://covers.openlibrary.org/b/id/12043351-L.jpg
+96	The Last of the Mohicans	https://covers.openlibrary.org/b/id/8236937-L.jpg
+97	David Copperfield	https://covers.openlibrary.org/b/id/1048892-L.jpg
+98	Reconfigurable Processor Array A Bit Sliced Parallel Computer (USA)	https://covers.openlibrary.org/b/id/8237007-L.jpg
+99	Software Engineering	https://covers.openlibrary.org/b/id/66176-L.jpg
+100	The C Programming Language	https://covers.openlibrary.org/b/id/6684943-L.jpg
+101	C++	https://covers.openlibrary.org/b/id/15111450-L.jpg
+102	Game Ai Pro 360	https://covers.openlibrary.org/b/id/13167358-L.jpg
+103	Tom Clancy's Net Force	https://covers.openlibrary.org/b/id/225568-L.jpg
+104	Information systems literacy	https://covers.openlibrary.org/b/id/3945707-L.jpg
+105	IBM PC Apprentice	https://covers.openlibrary.org/b/id/11723779-L.jpg
+106	Numerical methods for engineers	https://covers.openlibrary.org/b/id/63301-L.jpg
+107	IEEE standard for information technology	https://covers.openlibrary.org/b/id/1883601-L.jpg
+108	Structured Computer Organization	https://covers.openlibrary.org/b/id/9378728-L.jpg
+109	Introduction to Algorithms	https://covers.openlibrary.org/b/id/2341462-L.jpg
+110	Inside Macintosh	https://covers.openlibrary.org/b/id/4606739-L.jpg
+111	DOS	https://covers.openlibrary.org/b/id/3956527-L.jpg
+112	Raspberry Pi User Guide	https://covers.openlibrary.org/b/id/7605940-L.jpg
+113	Structure and Interpretation of Computer Programs (SICP)	https://covers.openlibrary.org/b/id/149338-L.jpg
+114	Software engineering	https://covers.openlibrary.org/b/id/3973371-L.jpg
+115	The art of computer programming	https://covers.openlibrary.org/b/id/136600-L.jpg
+116	Hackers	https://covers.openlibrary.org/b/id/106396-L.jpg
+117	Mostly BASIC	https://covers.openlibrary.org/b/id/8697035-L.jpg
+118	Running MS-DOS 20th Anniversary Edition	https://covers.openlibrary.org/b/id/461390-L.jpg
+119	The Book of Shaders	https://covers.openlibrary.org/b/id/15116918-L.jpg
+120	Learning to use microcomputer applications	https://covers.openlibrary.org/b/id/6693615-L.jpg
+121	C For Dummies	https://covers.openlibrary.org/b/id/6441511-L.jpg
+122	BASIC	https://covers.openlibrary.org/b/id/4665210-L.jpg
+123	Computers!	https://covers.openlibrary.org/b/id/6998642-L.jpg
+124	3D Game Environments	https://covers.openlibrary.org/b/id/9636835-L.jpg
+125	Lärobok i ALGOL	https://covers.openlibrary.org/b/id/11736796-L.jpg
+126	Apple Pro Training Series	https://covers.openlibrary.org/b/id/2384039-L.jpg
+127	Storytelling with Data	https://covers.openlibrary.org/b/id/7932707-L.jpg
+128	Apple Training Series	https://covers.openlibrary.org/b/id/193734-L.jpg
+129	Analyzing Baseball Data With R	https://covers.openlibrary.org/b/id/7560996-L.jpg
+130	Programming ArcObjects with VBA	https://covers.openlibrary.org/b/id/1599115-L.jpg
+131	Using MPI	https://covers.openlibrary.org/b/id/151585-L.jpg
+132	The Mythical Man-Month	https://covers.openlibrary.org/b/id/6915361-L.jpg
+133	Android application development all-in-one for dummies	https://covers.openlibrary.org/b/id/12525402-L.jpg
+134	Information Processing and Management of Uncertainty in Knowledge-Based Systems	https://covers.openlibrary.org/b/id/9380999-L.jpg
+135	Swift programming	https://covers.openlibrary.org/b/id/12641066-L.jpg
+136	Adventures in Raspberry Pi	https://covers.openlibrary.org/b/id/11585653-L.jpg
+137	Android Fully Loaded	https://covers.openlibrary.org/b/id/7815445-L.jpg
+138	Debugging with GDB	https://covers.openlibrary.org/b/id/6691152-L.jpg
+139	Arduino Cookbook	https://covers.openlibrary.org/b/id/9548400-L.jpg
+140	Computers and information processing	https://covers.openlibrary.org/b/id/6822262-L.jpg
+141	3D Game Engine Design	https://covers.openlibrary.org/b/id/784200-L.jpg
+142	ARM Assembly language	https://covers.openlibrary.org/b/id/10887430-L.jpg
+143	Game physics	https://covers.openlibrary.org/b/id/784257-L.jpg
+144	Building Embedded Linux Systems	https://covers.openlibrary.org/b/id/388572-L.jpg
+145	Computer graphics through openGL	https://covers.openlibrary.org/b/id/12587032-L.jpg
+146	C# Game Programming Cookbook for Unity 3D	https://covers.openlibrary.org/b/id/8513860-L.jpg
+147	Perl Cookbook	https://covers.openlibrary.org/b/id/7266902-L.jpg
+148	The Man Who Was Thursday	https://covers.openlibrary.org/b/id/8242857-L.jpg
+149	The Mysterious Affair at Styles	https://covers.openlibrary.org/b/id/13699667-L.jpg
+150	The Secret Adversary	https://covers.openlibrary.org/b/id/14590159-L.jpg
+151	The mystery of Edwin Drood	https://covers.openlibrary.org/b/id/8243336-L.jpg
+152	His Last Bow [8 stories]	https://covers.openlibrary.org/b/id/8243267-L.jpg
+153	Heart of Darkness	https://covers.openlibrary.org/b/id/12307847-L.jpg
+154	The Riddle of the Sands	https://covers.openlibrary.org/b/id/2293974-L.jpg
+155	Greenmantle	https://covers.openlibrary.org/b/id/93023-L.jpg
+156	Basil	https://covers.openlibrary.org/b/id/12968342-L.jpg
+157	Harry Potter and the Philosopher's Stone	https://covers.openlibrary.org/b/id/15155833-L.jpg
+158	The Law and the Lady	https://covers.openlibrary.org/b/id/6396941-L.jpg
+159	Trent's Last Case	https://covers.openlibrary.org/b/id/118583-L.jpg
+160	Prester John	https://covers.openlibrary.org/b/id/5981967-L.jpg
+161	Whose Body?	https://covers.openlibrary.org/b/id/8311819-L.jpg
+162	The Black Robe	https://covers.openlibrary.org/b/id/1759983-L.jpg
+163	Murder on the Links	https://covers.openlibrary.org/b/id/14582832-L.jpg
+164	Armadale	https://covers.openlibrary.org/b/id/780215-L.jpg
+165	Fifty Candles	https://covers.openlibrary.org/b/id/1956467-L.jpg
+166	The Angel of Terror	https://covers.openlibrary.org/b/id/1814681-L.jpg
+167	Murder on the Orient Express	https://covers.openlibrary.org/b/id/11100465-L.jpg
+168	No name	https://covers.openlibrary.org/b/id/103261-L.jpg
+169	The Amateur Cracksman	https://covers.openlibrary.org/b/id/2895793-L.jpg
+170	The Murder of Roger Ackroyd	https://covers.openlibrary.org/b/id/13151356-L.jpg
+171	Poirot investigates	https://covers.openlibrary.org/b/id/13670505-L.jpg
+172	The After House	https://covers.openlibrary.org/b/id/2757973-L.jpg
+173	The Da Vinci Code	https://covers.openlibrary.org/b/id/9255229-L.jpg
+174	The Man in the Brown Suit	https://covers.openlibrary.org/b/id/11153508-L.jpg
+175	The legacy of Cain	https://covers.openlibrary.org/b/id/494040-L.jpg
+176	Death on the Nile	https://covers.openlibrary.org/b/id/14066646-L.jpg
+177	The Circular Staircase	https://covers.openlibrary.org/b/id/2761207-L.jpg
+178	The Paradise Mystery	https://covers.openlibrary.org/b/id/1814712-L.jpg
+179	Tales of Terror and Mystery	https://covers.openlibrary.org/b/id/8311421-L.jpg
+180	The dead secret	https://covers.openlibrary.org/b/id/14305247-L.jpg
+181	The Lodger	https://covers.openlibrary.org/b/id/696674-L.jpg
+182	R. Holmes & Co.	https://covers.openlibrary.org/b/id/5716647-L.jpg
+183	L'affaire Lerouge	https://covers.openlibrary.org/b/id/4486242-L.jpg
+184	Harry Potter and the Deathly Hallows	https://covers.openlibrary.org/b/id/15158660-L.jpg
+185	The A.B.C. Murders	https://covers.openlibrary.org/b/id/14573514-L.jpg
+186	The Queen of Hearts	https://covers.openlibrary.org/b/id/1861500-L.jpg
+187	4:50 from Paddington	https://covers.openlibrary.org/b/id/13151352-L.jpg
+188	The daffodil murder	https://covers.openlibrary.org/b/id/2895230-L.jpg
+189	The Mysterious Key And What It Opened	https://covers.openlibrary.org/b/id/1815112-L.jpg
+190	Dead Men Tell No Tales	https://covers.openlibrary.org/b/id/2890645-L.jpg
+191	The Body in the Library	https://covers.openlibrary.org/b/id/12855259-L.jpg
+192	The Murder at the Vicarage	https://covers.openlibrary.org/b/id/12996560-L.jpg
+193	The Guilty River	https://covers.openlibrary.org/b/id/5723048-L.jpg
+194	The Mirror Crack'd from Side to Side	https://covers.openlibrary.org/b/id/10561150-L.jpg
+195	Gulliver's Travels	https://covers.openlibrary.org/b/id/12717083-L.jpg
+196	A Midsummer Night's Dream	https://covers.openlibrary.org/b/id/7205924-L.jpg
+197	Through the Looking-Glass	https://covers.openlibrary.org/b/id/11272464-L.jpg
+198	The Wind in the Willows	https://covers.openlibrary.org/b/id/13335427-L.jpg
+199	The Princess and the Goblin	https://covers.openlibrary.org/b/id/14363454-L.jpg
+200	The Marvelous Land of Oz	https://covers.openlibrary.org/b/id/12648656-L.jpg
+201	Ozma of Oz	https://covers.openlibrary.org/b/id/12648657-L.jpg
+202	Le petit prince	https://covers.openlibrary.org/b/id/10708272-L.jpg
+203	The Emerald City of Oz	https://covers.openlibrary.org/b/id/1473556-L.jpg
+204	Dorothy and the Wizard in Oz	https://covers.openlibrary.org/b/id/12648659-L.jpg
+205	The Lost Princess of Oz	https://covers.openlibrary.org/b/id/854819-L.jpg
+206	The Story of the Amulet	https://covers.openlibrary.org/b/id/13241470-L.jpg
+207	The Complete Life and Adventures of Santa Claus	https://covers.openlibrary.org/b/id/1979059-L.jpg
+208	Alice's Adventures in Wonderland / Through the Looking Glass	https://covers.openlibrary.org/b/id/8595966-L.jpg
+209	The Road to Oz	https://covers.openlibrary.org/b/id/8243922-L.jpg
+210	The Sea Fairies	https://covers.openlibrary.org/b/id/1814237-L.jpg
+211	Baum's American Fairy Tales	https://covers.openlibrary.org/b/id/709869-L.jpg
+212	Sky Island	https://covers.openlibrary.org/b/id/2752804-L.jpg
+213	The Scarecrow of Oz	https://covers.openlibrary.org/b/id/431586-L.jpg
+214	The Patchwork Girl of Oz	https://covers.openlibrary.org/b/id/1473369-L.jpg
+215	The Magic of Oz	https://covers.openlibrary.org/b/id/5071176-L.jpg
+216	Tik-Tok of Oz	https://covers.openlibrary.org/b/id/8243277-L.jpg
+217	Rinkitink in Oz	https://covers.openlibrary.org/b/id/765814-L.jpg
+218	The Enchanted Castle	https://covers.openlibrary.org/b/id/6644514-L.jpg
+219	Phantastes	https://covers.openlibrary.org/b/id/14358814-L.jpg
+220	The Hobbit	https://covers.openlibrary.org/b/id/14627509-L.jpg
+221	The Tin Woodman of Oz	https://covers.openlibrary.org/b/id/755973-L.jpg
+222	Glinda of Oz	https://covers.openlibrary.org/b/id/758814-L.jpg
+223	The Magic City	https://covers.openlibrary.org/b/id/1673063-L.jpg
+224	Peter Pan	https://covers.openlibrary.org/b/id/8237052-L.jpg
+225	The Phoenix and the Carpet	https://covers.openlibrary.org/b/id/902122-L.jpg
+226	Le avventure di Pinocchio	https://covers.openlibrary.org/b/id/8597022-L.jpg
+227	À rebours	https://covers.openlibrary.org/b/id/13170209-L.jpg
+228	The Secret Agent	https://covers.openlibrary.org/b/id/8239401-L.jpg
+229	Puck of Pook's Hill	https://covers.openlibrary.org/b/id/8242296-L.jpg
+230	Harry Potter and the Chamber of Secrets	https://covers.openlibrary.org/b/id/15158664-L.jpg
+231	The Fellowship of the Ring	https://covers.openlibrary.org/b/id/14627060-L.jpg
+232	The Enchanted Island of Yew	https://covers.openlibrary.org/b/id/1755697-L.jpg
+233	The Thirty-Nine Steps	https://covers.openlibrary.org/b/id/93020-L.jpg
+234	The Red Badge of Courage	https://covers.openlibrary.org/b/id/8236915-L.jpg
+235	The Prisoner of Zenda	https://covers.openlibrary.org/b/id/105814-L.jpg
+236	The deerslayer	https://covers.openlibrary.org/b/id/8237593-L.jpg
+237	Mr. Standfast	https://covers.openlibrary.org/b/id/6962564-L.jpg
+238	The Pathfinder	https://covers.openlibrary.org/b/id/8980913-L.jpg
+239	White Fang	https://covers.openlibrary.org/b/id/8236920-L.jpg
+240	The pioneers	https://covers.openlibrary.org/b/id/9000512-L.jpg
+241	Kidnapped	https://covers.openlibrary.org/b/id/8267822-L.jpg
+242	A strange disappearance	https://covers.openlibrary.org/b/id/12657405-L.jpg
+243	The Evil Shepherd	https://covers.openlibrary.org/b/id/12648419-L.jpg
+244	Otto of the Silver Hand	https://covers.openlibrary.org/b/id/7263483-L.jpg
+245	A Tale of Three Lions	https://covers.openlibrary.org/b/id/2009339-L.jpg
+246	The Beetle. A Mystery	https://covers.openlibrary.org/b/id/750958-L.jpg
+247	An American Tragedy	https://covers.openlibrary.org/b/id/12728401-L.jpg
+248	Lord of the Flies	https://covers.openlibrary.org/b/id/8684447-L.jpg
+249	The Four Just Men	https://covers.openlibrary.org/b/id/12947886-L.jpg
+250	Casino Royale	https://covers.openlibrary.org/b/id/5540820-L.jpg
+251	Michel Strogoff	https://covers.openlibrary.org/b/id/10393209-L.jpg
+252	From Russia, with love	https://covers.openlibrary.org/b/id/109458-L.jpg
+254	In Secret	https://covers.openlibrary.org/b/id/1844837-L.jpg
+255	The Drums of Jeopardy	https://covers.openlibrary.org/b/id/11351150-L.jpg
+256	Nightmare Abbey	https://covers.openlibrary.org/b/id/1956635-L.jpg
+257	The Eye of Osiris	https://covers.openlibrary.org/b/id/7162423-L.jpg
+259	Doctor No	https://covers.openlibrary.org/b/id/6491664-L.jpg
+260	Carrie	https://covers.openlibrary.org/b/id/9256043-L.jpg
+261	Diamonds are Forever	https://covers.openlibrary.org/b/id/5540817-L.jpg
+262	Robur le conquérant	https://covers.openlibrary.org/b/id/2821179-L.jpg
+263	Cinq semaines en ballon	https://covers.openlibrary.org/b/id/8179189-L.jpg
+264	The Pillars of the Earth	https://covers.openlibrary.org/b/id/9269909-L.jpg
+265	The spy who loved me	https://covers.openlibrary.org/b/id/109573-L.jpg
+266	Moonraker	https://covers.openlibrary.org/b/id/6593911-L.jpg
+267	You Only Live Twice	https://covers.openlibrary.org/b/id/14076122-L.jpg
+268	Misery	https://covers.openlibrary.org/b/id/8259296-L.jpg
+269	I, Robot	https://covers.openlibrary.org/b/id/12385229-L.jpg
+272	Thunderball	https://covers.openlibrary.org/b/id/109571-L.jpg
+273	Le Chancellor	https://covers.openlibrary.org/b/id/3137735-L.jpg
+274	On Her Majesty's Secret Service	https://covers.openlibrary.org/b/id/109572-L.jpg
+275	Walden	https://covers.openlibrary.org/b/id/11248037-L.jpg
+276	Dubliners	https://covers.openlibrary.org/b/id/8216412-L.jpg
+277	Captains Courageous	https://covers.openlibrary.org/b/id/12819857-L.jpg
+278	My Ántonia	https://covers.openlibrary.org/b/id/8369013-L.jpg
+279	Leaves of Grass	https://covers.openlibrary.org/b/id/9000447-L.jpg
+280	The Canterbury Tales	https://covers.openlibrary.org/b/id/5767180-L.jpg
+281	The Pilgrim's Progress	https://covers.openlibrary.org/b/id/8229224-L.jpg
+282	The Autobiography of Benjamin Franklin	https://covers.openlibrary.org/b/id/5647361-L.jpg
+283	Sonnets	https://covers.openlibrary.org/b/id/8222090-L.jpg
+284	King Henry V	https://covers.openlibrary.org/b/id/7420215-L.jpg
+285	The Second Jungle Book	https://covers.openlibrary.org/b/id/2140514-L.jpg
+286	The Tenant of Wildfell Hall	https://covers.openlibrary.org/b/id/1023552-L.jpg
+287	Ab urbe condita	https://covers.openlibrary.org/b/id/6657951-L.jpg
+288	Orthodoxy	https://covers.openlibrary.org/b/id/6268135-L.jpg
+289	Saint Francis of Assisi	https://covers.openlibrary.org/b/id/502618-L.jpg
+290	The Jungle Book	https://covers.openlibrary.org/b/id/3344204-L.jpg
+291	My bondage and my freedom	https://covers.openlibrary.org/b/id/14847114-L.jpg
+292	Metamorphoses	https://covers.openlibrary.org/b/id/7212118-L.jpg
+293	At the Back of the North Wind	https://covers.openlibrary.org/b/id/8245161-L.jpg
+294	Lilith	https://covers.openlibrary.org/b/id/14364546-L.jpg
+295	A history of New York	https://covers.openlibrary.org/b/id/1991009-L.jpg
+296	The  man who would be king	https://covers.openlibrary.org/b/id/6021425-L.jpg
+297	Manifest der Kommunistischen Partei	https://covers.openlibrary.org/b/id/11048623-L.jpg
+298	Quo Vadis? Powieść z czasów Nerona	https://covers.openlibrary.org/b/id/833096-L.jpg
+299	Confessions	https://covers.openlibrary.org/b/id/9022521-L.jpg
+300	Up from Slavery	https://covers.openlibrary.org/b/id/119317-L.jpg
+301	Roughing It	https://covers.openlibrary.org/b/id/9165528-L.jpg
+302	Paradise Lost	https://covers.openlibrary.org/b/id/5992814-L.jpg
+303	Incidents in the Life of a Slave Girl	https://covers.openlibrary.org/b/id/411542-L.jpg
+304	Der Antichrist	https://covers.openlibrary.org/b/id/1759313-L.jpg
+305	Two years before the mast	https://covers.openlibrary.org/b/id/8245243-L.jpg
+306	Les fleurs du mal	https://covers.openlibrary.org/b/id/8236412-L.jpg
+307	Lord Jim	https://covers.openlibrary.org/b/id/8236295-L.jpg
+308	Erewhon	https://covers.openlibrary.org/b/id/825789-L.jpg
+309	Lives	https://covers.openlibrary.org/b/id/10679669-L.jpg
+310	The Magician	https://covers.openlibrary.org/b/id/2789948-L.jpg
+311	Cyrano de Bergerac	https://covers.openlibrary.org/b/id/8236320-L.jpg
+312	The life of Olaudah Equiano, or Gustavus Vassa, the African	https://covers.openlibrary.org/b/id/2074044-L.jpg
+313	Sailing alone around the world	https://covers.openlibrary.org/b/id/8247067-L.jpg
+314	Het Achterhuis	https://covers.openlibrary.org/b/id/8584021-L.jpg
+315	Pride and Prejudice	https://www.gutenberg.org/cache/epub/1342/pg1342.cover.medium.jpg
+316	Frankenstein; Or, The Modern Prometheus	https://www.gutenberg.org/cache/epub/84/pg84.cover.medium.jpg
+317	Alice's Adventures in Wonderland	https://www.gutenberg.org/cache/epub/11/pg11.cover.medium.jpg

@@ -69,7 +69,7 @@ export default function Login() {
           <form className={styles['login-form']} onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="login-email" className="form-label">
-                Email Address
+                Email
               </label>
               <input
                 id="login-email"
@@ -120,7 +120,13 @@ export default function Login() {
           </form>
 
           <div className={styles['login-footer']}>
-            <Link to="/">← Back to Home</Link>
+            <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5"/>
+                <polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back to Home
+            </Link>
           </div>
         </div>
       </div>

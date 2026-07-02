@@ -51,8 +51,8 @@ async function request(endpoint, options = {}) {
 
   // Handle 401 — session expired
   if (response.status === 401) {
-    // If checking auth status or logging in, do not loop or redirect
-    if (endpoint.startsWith('/auth/')) {
+    // If logging in, refreshing, or logging out, do not attempt to refresh
+    if (['/auth/login', '/auth/refresh', '/auth/logout'].includes(endpoint)) {
       throw new ApiError('Not authenticated', 401);
     }
 
@@ -148,6 +148,13 @@ export const api = {
   put(endpoint, body) {
     return request(endpoint, {
       method: 'PUT',
+      body: JSON.stringify(body),
+    });
+  },
+
+  patch(endpoint, body) {
+    return request(endpoint, {
+      method: 'PATCH',
       body: JSON.stringify(body),
     });
   },
