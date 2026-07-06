@@ -81,6 +81,8 @@ export function Sidebar({ collapsed, toggleCollapse }) {
   const { user, logout, isStaff, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const isVisuallyCollapsed = collapsed && !isHovered;
 
   async function handleLogout() {
     await logout();
@@ -92,10 +94,9 @@ export function Sidebar({ collapsed, toggleCollapse }) {
 
   function NavItem({ to, icon, label }) {
     return (
-      <NavLink to={to} className={linkClass} onClick={() => setOpen(false)} title={collapsed ? label : undefined}>
+      <NavLink to={to} className={linkClass} onClick={() => setOpen(false)}>
         <span className="sidebar-icon">{icon}</span>
         <span className={styles['link-text']}>{label}</span>
-        {collapsed && <span className={styles.tooltip}>{label}</span>}
       </NavLink>
     );
   }
@@ -117,24 +118,22 @@ export function Sidebar({ collapsed, toggleCollapse }) {
         onClick={() => setOpen(false)}
       />
 
-      <aside className={`${styles.sidebar} ${open ? styles.open : ''} ${collapsed ? styles.collapsed : ''}`}>
-        {/* Collapse toggle button for desktop */}
-        <button className={styles['collapse-btn']} onClick={toggleCollapse} aria-label="Collapse sidebar" title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}>
-          {collapsed ? icons.chevronRight : icons.chevronLeft}
-        </button>
-
+      <aside
+        className={`${styles.sidebar} ${open ? styles.open : ''} ${isVisuallyCollapsed ? styles.collapsed : ''} ${collapsed && isHovered ? styles.hoverExpanded : ''}`}
+        onMouseEnter={() => collapsed && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {/* Brand */}
         <div className={styles['sidebar-brand']}>
-          {!collapsed ? (
-            <>
+          <div className={styles['brand-container']}>
+            <div className={styles['brand-icon']} title="Brew & Borrow">
+              <img src="/coffee-cup.png" alt="Brew & Borrow Cafe Library" className={styles['brand-logo']} />
+            </div>
+            <div className={styles['brand-text']}>
               <h1>Brew & Borrow</h1>
               <span>Café Library</span>
-            </>
-          ) : (
-            <div className={styles['brand-icon']} title="Brew & Borrow">
-              ☕
             </div>
-          )}
+          </div>
         </div>
 
         {/* Navigation */}
@@ -160,15 +159,15 @@ export function Sidebar({ collapsed, toggleCollapse }) {
             </div>
           )}
 
-          <div className={styles['sidebar-section']}>
-            <div className={styles['sidebar-section-label']}>Account</div>
-            <NavItem to="/app/profile" icon={icons.profile} label="Profile" />
-          </div>
         </nav>
 
         {/* Footer */}
         <div className={styles['sidebar-footer']}>
-          <div className={styles['sidebar-user']} title={collapsed ? (user?.full_name || user?.username) : undefined}>
+          <div
+            className={styles['sidebar-user']}
+            onClick={() => { navigate('/app/profile'); setOpen(false); }}
+            style={{ cursor: 'pointer' }}
+          >
             <div className={styles['sidebar-avatar']}>
               {getInitials(user?.full_name)}
             </div>
@@ -176,12 +175,10 @@ export function Sidebar({ collapsed, toggleCollapse }) {
               <div className={styles['sidebar-user-name']}>{user?.full_name || user?.username}</div>
               <div className={styles['sidebar-user-role']}>{user?.role}</div>
             </div>
-            {collapsed && <span className={styles.tooltip}>{user?.full_name || user?.username}</span>}
           </div>
-          <button className={styles['sidebar-logout']} onClick={handleLogout} title={collapsed ? "Sign Out" : undefined}>
+          <button className={styles['sidebar-logout']} onClick={handleLogout}>
             <span className="sidebar-icon">{icons.logout}</span>
             <span className={styles['link-text']}>Sign Out</span>
-            {collapsed && <span className={styles.tooltip}>Sign Out</span>}
           </button>
         </div>
       </aside>

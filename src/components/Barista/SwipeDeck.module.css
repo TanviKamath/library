@@ -1,0 +1,300 @@
+/* ========================================
+   SWIPE DECK — Tinder-style card stack
+   ======================================== */
+
+.deckContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  user-select: none;
+}
+
+/* ── Progress bar ── */
+.progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #8B5A2B, #D4A574);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.progressText {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+/* ── Card stack ── */
+.cardStack {
+  position: relative;
+  width: 280px;
+  height: 360px;
+}
+
+.card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #FFFDF7;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.35),
+    0 5px 15px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(139, 90, 43, 0.2);
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+/* ── Fly-off animations (Tinder style swoop) ── */
+@keyframes flyRight {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(180%, -40px) rotate(28deg);
+    opacity: 0;
+  }
+}
+
+@keyframes flyLeft {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-180%, -40px) rotate(-28deg);
+    opacity: 0;
+  }
+}
+
+.flyRight {
+  animation: flyRight 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.flyLeft {
+  animation: flyLeft 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ── Like / Nope overlays (Tinder corner stamps) ── */
+.overlayLike,
+.overlayNope {
+  position: absolute;
+  top: 25px;
+  z-index: 20;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.overlayLike {
+  left: 25px;
+}
+
+.overlayNope {
+  right: 25px;
+}
+
+.overlayLike span,
+.overlayNope span {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  padding: 0.35rem 1.2rem;
+  border-radius: 8px;
+  border-width: 4px;
+  border-style: solid;
+  text-transform: uppercase;
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.overlayLike span {
+  color: #00E676;
+  border-color: #00E676;
+  background: rgba(0, 0, 0, 0.65);
+  transform: rotate(-15deg);
+}
+
+.overlayNope span {
+  color: #FF4B4B;
+  border-color: #FF4B4B;
+  background: rgba(0, 0, 0, 0.65);
+  transform: rotate(15deg);
+}
+
+/* ── Book cover ── */
+.coverWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #F4EBE1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  color: white;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Card info ── */
+.cardInfo {
+  padding: 0.8rem 1.1rem;
+  background: #FFFDF7;
+  border-top: 2px solid #F4EBE1;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2C1810;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardAuthor {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #8B5A2B;
+  font-style: italic;
+}
+
+.genreBadge {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.2rem 0.7rem;
+  background: rgba(139, 90, 43, 0.1);
+  border: 1px solid rgba(139, 90, 43, 0.25);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8B5A2B;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ── Quick action buttons ── */
+.actions {
+  display: flex;
+  gap: 2.2rem;
+  align-items: center;
+  margin-top: -0.2rem;
+}
+
+.actionBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: #FFFDF7;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.actionBtn svg {
+  width: 28px;
+  height: 28px;
+}
+
+.nopeBtn {
+  border-color: #FF4B4B;
+  color: #FF4B4B;
+}
+
+.nopeBtn:hover {
+  background: #FF4B4B;
+  color: #FFFFFF;
+  transform: scale(1.15) rotate(-8deg);
+  box-shadow: 0 8px 25px rgba(255, 75, 75, 0.45);
+}
+
+.likeBtn {
+  border-color: #00E676;
+  color: #00E676;
+}
+
+.likeBtn:hover {
+  background: #00E676;
+  color: #FFFFFF;
+  transform: scale(1.15) rotate(8deg);
+  box-shadow: 0 8px 25px rgba(0, 230, 118, 0.45);
+}
+
+.actionBtn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .cardStack {
+    width: 260px;
+    height: 370px;
+  }
+
+  .actionBtn {
+    width: 50px;
+    height: 50px;
+  }
+
+  .actionBtn svg {
+    width: 22px;
+    height: 22px;
+  }
+}

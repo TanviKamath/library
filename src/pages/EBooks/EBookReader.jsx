@@ -32,7 +32,7 @@ function loadFontPref() {
 function paginateIntoPages(paragraphs, containerWidth, containerHeight, fontSize, chapterParagraphIndexes = new Set()) {
   if (!paragraphs || paragraphs.length === 0) return [];
   const width = Math.max(280, containerWidth || (window.innerWidth - 180));
-  const height = Math.max(300, containerHeight || (window.innerHeight - 150));
+  const height = Math.max(400, containerHeight || (window.innerHeight - 200));
 
   const measureEl = document.createElement('div');
   measureEl.style.position = 'absolute';
@@ -46,7 +46,7 @@ function paginateIntoPages(paragraphs, containerWidth, containerHeight, fontSize
   measureEl.style.visibility = 'hidden';
   document.body.appendChild(measureEl);
 
-  const maxHeight = Math.max(150, height - 54);
+  const maxHeight = Math.max(200, height - 100);
   const pages = [];
   let currentPage = [];
 
@@ -142,30 +142,61 @@ function paginateIntoPages(paragraphs, containerWidth, containerHeight, fontSize
 
 function detectChapters(paragraphs) {
   const detected = [];
-  const chapterRegex = /^\s*(chapter|ch\.|part|section|book|capter)\b/i;
-  const romanRegex = /^\s*[IVXLCDM]+\.?\s*$/i;
+  
+  // Enhanced regex patterns for chapter detection
+  const chapterPatterns = [
+    /^\s*(chapter|chapitre|kapitel|capitulo|ch\.|chap\.)[\s\.\-_]*(\d+|[IVXLCDM]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)/i,
+    /^\s*(part|partie|teil|parte|book|livre|buch|libro)[\s\.\-_]*(\d+|[IVXLCDM]+|one|two|three|four|five)/i,
+    /^\s*[IVXLCDM]+\.?\s*$/i, // Roman numerals alone
+    /^\s*\d+\.?\s*$/, // Just numbers (1., 2., etc.)
+    /^\s*prologue\s*$/i,
+    /^\s*epilogue\s*$/i,
+    /^\s*introduction\s*$/i,
+    /^\s*preface\s*$/i,
+    /^\s*foreword\s*$/i,
+    /^\s*afterword\s*$/i,
+  ];
   
   for (let idx = 0; idx < paragraphs.length; idx++) {
     const p = paragraphs[idx].trim();
-    if (p.length > 0 && p.length < 80) {
-      const isChapter = chapterRegex.test(p);
-      const isRoman = romanRegex.test(p);
-      const isShortCaps = p.length > 3 && p === p.toUpperCase() && /^[A-Z0-9\s\-\.\,\:\;\!\?]+$/.test(p);
-      
-      if (isChapter || isRoman || isShortCaps) {
-        if (detected.length === 0 || idx - detected[detected.length - 1].paragraphIndex > 5) {
-          detected.push({
-            title: p,
-            paragraphIndex: idx,
-            page: Math.floor(idx / PARAGRAPHS_PER_PAGE),
-            wordCount: 0,
-            readingTime: 0
-          });
-        }
+    
+    // Skip empty or very long paragraphs
+    if (p.length === 0 || p.length > 120) continue;
+    
+    let isChapterHeading = false;
+    
+    // Check against all chapter patterns
+    for (const pattern of chapterPatterns) {
+      if (pattern.test(p)) {
+        isChapterHeading = true;
+        break;
+      }
+    }
+    
+    // Also detect short ALL CAPS text that could be chapter titles
+    if (!isChapterHeading && p.length >= 3 && p.length <= 80) {
+      const isAllCaps = p === p.toUpperCase() && /^[A-Z0-9\s\-\.\,\:\;\!\?\'\"\(\)]+$/.test(p);
+      const hasLetters = /[A-Z]/.test(p);
+      if (isAllCaps && hasLetters) {
+        isChapterHeading = true;
+      }
+    }
+    
+    // Add chapter if detected and not too close to previous chapter
+    if (isChapterHeading) {
+      if (detected.length === 0 || idx - detected[detected.length - 1].paragraphIndex > 3) {
+        detected.push({
+          title: p,
+          paragraphIndex: idx,
+          page: Math.floor(idx / PARAGRAPHS_PER_PAGE),
+          wordCount: 0,
+          readingTime: 0
+        });
       }
     }
   }
 
+  // Calculate word count and reading time for each chapter
   for (let c = 0; c < detected.length; c++) {
     const start = detected[c].paragraphIndex;
     const end = (c + 1 < detected.length) ? detected[c + 1].paragraphIndex : paragraphs.length;
@@ -177,9 +208,11 @@ function detectChapters(paragraphs) {
     detected[c].readingTime = Math.max(1, Math.round(words / 200));
   }
 
+  // Fallback: if no chapters detected, create sections based on content
   if (detected.length === 0 && paragraphs.length > 0) {
     const totalPages = Math.ceil(paragraphs.length / PARAGRAPHS_PER_PAGE);
     const interval = Math.max(5, Math.round(totalPages / 10));
+    let sectionNum = 1;
     for (let page = 0; page < totalPages; page += interval) {
       const startIdx = page * PARAGRAPHS_PER_PAGE;
       const endIdx = Math.min((page + interval) * PARAGRAPHS_PER_PAGE, paragraphs.length);
@@ -187,13 +220,26 @@ function detectChapters(paragraphs) {
       for (let pIdx = startIdx; pIdx < endIdx; pIdx++) {
         words += paragraphs[pIdx].split(/\s+/).filter(Boolean).length;
       }
+      
+      // Create more descriptive section titles
+      let sectionTitle = `Section ${sectionNum}`;
+      
+      // Try to get a preview from the first paragraph of this section
+      if (paragraphs[startIdx]) {
+        const preview = paragraphs[startIdx].trim().slice(0, 50);
+        if (preview.length > 0) {
+          sectionTitle = `Section ${sectionNum}: ${preview}${preview.length >= 50 ? '...' : ''}`;
+        }
+      }
+      
       detected.push({
-        title: `Section starting on Pg ${page + 1}`,
+        title: sectionTitle,
         paragraphIndex: startIdx,
         page: page,
         wordCount: words,
         readingTime: Math.max(1, Math.round(words / 200))
       });
+      sectionNum++;
     }
   }
   return detected;
@@ -257,7 +303,7 @@ export default function EBookReader() {
     if (!paragraphs || paragraphs.length === 0) return;
 
     const updatePages = () => {
-      const height = contentAreaRef.current?.clientHeight || (window.innerHeight - 150);
+      const height = contentAreaRef.current?.clientHeight || (window.innerHeight - 200);
       const width = contentAreaRef.current
         ? contentAreaRef.current.clientWidth - 80
         : Math.min(window.innerWidth - 160, 820) - 80;
@@ -706,7 +752,9 @@ export default function EBookReader() {
                           }}
                         >
                           <span className={styles['toc-item-title']}>{ch.title}</span>
-                          <span className={styles['toc-item-meta']}>Pg {ch.page + 1} ({ch.readingTime}m)</span>
+                          <span className={styles['toc-item-meta']}>
+                            Page {ch.page + 1} · {ch.readingTime} min read
+                          </span>
                         </button>
                       ))}
                     </div>

@@ -124,7 +124,7 @@ function MemberDashboard() {
             <h3>No books checked out</h3>
             <p>Visit the catalog to find your next read.</p>
             <button className="btn btn-primary" style={{ marginTop: 'var(--space-4)' }} onClick={() => navigate('/app/browse')}>
-              Browse Books
+              Browse books
             </button>
           </div>
         ) : (
@@ -256,33 +256,33 @@ function StaffDashboard() {
 
   return (
     <>
-      <SpotlightSection actionLabel="View Spotlight Details" />
+      <SpotlightSection actionLabel="View spotlight details" />
 
       {/* Stats Cards */}
       {stats && (
         <div className={styles['stats-grid']}>
-          <div className={styles['stat-card']}>
+          <div className={styles['stat-card']} style={{ cursor: 'pointer' }} onClick={() => navigate('/app/admin?tab=books')} title="Go to Books">
             <div className={styles['stat-label']}>Total Books</div>
             <div className={styles['stat-value']}>{stats.totalBooks}</div>
           </div>
-          <div className={styles['stat-card']}>
+          <div className={styles['stat-card']} style={{ cursor: 'pointer' }} onClick={() => navigate('/app/admin?tab=members')} title="Go to Members">
             <div className={styles['stat-label']}>Total Members</div>
             <div className={styles['stat-value']}>{stats.totalMembers}</div>
           </div>
-          <div className={styles['stat-card']}>
+          <div className={styles['stat-card']} style={{ cursor: 'pointer' }} onClick={() => navigate('/app/admin?tab=transactions')} title="Go to Transactions">
             <div className={styles['stat-label']}>Issued Books</div>
             <div className={styles['stat-value']}>{stats.issuedBooks}</div>
           </div>
-          <div className={styles['stat-card']} style={{ position: 'relative', overflow: 'hidden' }}>
+          <div className={styles['stat-card']} style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={() => navigate('/app/admin?tab=transactions')} title="Go to Transactions">
             <div className={styles['stat-label']}>Overdue</div>
             <div className={styles['stat-value']}>{stats.overdueBooks}</div>
             {stats.overdueBooks > 0 && <OverdueStamp />}
           </div>
-          <div className={`${styles['stat-card']} ${stats.dueToday > 0 ? styles.accent : ''}`}>
+          <div className={`${styles['stat-card']} ${stats.dueToday > 0 ? styles.accent : ''}`} style={{ cursor: 'pointer' }} onClick={() => navigate('/app/admin?tab=transactions')} title="Go to Transactions">
             <div className={styles['stat-label']}>Due Today</div>
             <div className={styles['stat-value']}>{stats.dueToday}</div>
           </div>
-          <div className={styles['stat-card']}>
+          <div className={styles['stat-card']} style={{ cursor: 'pointer' }} onClick={() => navigate('/app/admin?tab=books')} title="Go to Books">
             <div className={styles['stat-label']}>Added This Month</div>
             <div className={styles['stat-value']}>{stats.booksAddedThisMonth}</div>
           </div>
@@ -305,26 +305,44 @@ function StaffDashboard() {
       <div className={styles['two-col']}>
         {/* Popular Books */}
         {analytics?.popularBooks && (
-          <div className={styles.section}>
+          <div className={styles.section} style={{ display: 'flex', flexDirection: 'column' }}>
             <div className={styles['section-header']}>
               <h2>Popular Books</h2>
             </div>
-            <table className={styles['due-table']}>
+            <table className={styles['due-table']} style={{ flex: 1 }}>
               <thead>
                 <tr>
-                  <th style={{ width: 50, textAlign: 'center' }}>#</th>
+                  <th style={{ width: 60, textAlign: 'center' }}>Rank</th>
                   <th>Book Title</th>
                   <th style={{ textAlign: 'right' }}>Borrows</th>
                 </tr>
               </thead>
               <tbody>
-                {analytics.popularBooks.map((b, i) => (
+                {analytics.popularBooks.slice(0, 5).map((b, i) => (
                   <tr key={i}>
-                    <td style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-md)', color: 'var(--color-terracotta)', fontWeight: 600, textAlign: 'center' }}>
-                      {i + 1}
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        background: i === 0 ? '#fef3c7' : i === 1 ? '#f1f5f9' : i === 2 ? '#ffedd5' : '#f8fafc',
+                        color: i === 0 ? '#b45309' : i === 1 ? '#475569' : i === 2 ? '#c2410c' : '#64748b',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        border: i === 0 ? '1px solid #fde68a' : i === 1 ? '1px solid #e2e8f0' : i === 2 ? '1px solid #fed7aa' : '1px solid #f1f5f9'
+                      }}>
+                        {i + 1}
+                      </span>
                     </td>
-                    <td style={{ fontWeight: 500 }}>{b.title}</td>
-                    <td style={{ textAlign: 'right', color: 'var(--color-charcoal-light)', fontWeight: 600 }}>{b.count}</td>
+                    <td style={{ fontWeight: 600, color: 'var(--color-espresso, #2d2420)', fontSize: '13.5px' }}>{b.title}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <span style={{ background: '#f1f5f9', color: '#334155', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>
+                        {b.count} {b.count === 1 ? 'borrow' : 'borrows'}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -334,7 +352,7 @@ function StaffDashboard() {
 
         {/* Recent Activity */}
         {analytics?.recentActivity && (
-          <div className={styles.section}>
+          <div className={styles.section} style={{ display: 'flex', flexDirection: 'column' }}>
             <div className={styles['section-header']}>
               <h2>Recent Activity</h2>
               <button className="btn btn-ghost btn-sm" onClick={() => navigate('/app/admin')} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -344,7 +362,7 @@ function StaffDashboard() {
                 </svg>
               </button>
             </div>
-            <table className={styles['due-table']}>
+            <table className={styles['due-table']} style={{ flex: 1 }}>
               <thead>
                 <tr>
                   <th>Member</th>
@@ -354,11 +372,11 @@ function StaffDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {analytics.recentActivity.map(a => (
+                {analytics.recentActivity.slice(0, 5).map(a => (
                   <tr key={a.id}>
-                    <td style={{ fontWeight: 500 }}>{a.user_name}</td>
-                    <td style={{ color: 'var(--color-charcoal)' }}>{a.book_title}</td>
-                    <td style={{ color: 'var(--color-charcoal-light)', fontSize: 'var(--fs-xs)' }}>{formatDate(a.date)}</td>
+                    <td style={{ fontWeight: 600, color: 'var(--color-espresso, #2d2420)', fontSize: '13.5px' }}>{a.user_name}</td>
+                    <td style={{ color: '#475569', fontSize: '13.5px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.book_title}>{a.book_title}</td>
+                    <td style={{ color: '#64748b', fontSize: '12.5px', whiteSpace: 'nowrap' }}>{formatDate(a.date)}</td>
                     <td>
                       <span className={`${styles.badge} ${a.status === 'active' ? styles['badge-active'] : a.status === 'returned' ? styles['badge-info'] : styles['badge-overdue']}`}>
                         {a.status}
@@ -427,7 +445,7 @@ function SpotlightSection({ actionLabel }) {
             </button>
             {isAdmin && (
               <button className={styles['spotlight-edit-btn']} onClick={() => setShowEditModal(true)}>
-                Edit Spotlight
+                Edit spotlight
               </button>
             )}
           </div>
@@ -589,7 +607,7 @@ function FavouritesSection() {
           <h3 style={{ fontSize: 'var(--fs-md)', marginBottom: 'var(--space-2)' }}>No favourite books yet</h3>
           <p style={{ fontSize: 'var(--fs-sm)', marginBottom: 'var(--space-4)' }}>Explore the catalog and tap the heart icon on books you love to save them here.</p>
           <button className="btn btn-primary btn-sm" onClick={() => navigate('/app/browse')}>
-            Browse Catalog
+            Browse catalog
           </button>
         </div>
       ) : (

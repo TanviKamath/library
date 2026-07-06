@@ -207,7 +207,7 @@ export default function MysteryDraw() {
                       This book has been successfully added to your reservations queue.
                     </p>
                     <button className={styles.actionBtn} onClick={() => navigate('/app/dashboard')}>
-                      Go to Dashboard
+                      Go to dashboard
                     </button>
                   </div>
                 ) : (

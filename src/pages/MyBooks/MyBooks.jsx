@@ -100,7 +100,7 @@ export default function MyBooks() {
             <h3>No books borrowed right now</h3>
             <p>Explore our catalog and find your next read.</p>
             <button className="btn btn-primary" style={{ marginTop: 'var(--space-4)' }} onClick={() => navigate('/app/browse')}>
-              Browse Library
+              Browse library
             </button>
           </div>
         ) : (
@@ -149,7 +149,7 @@ export default function MyBooks() {
                         <span style={{ fontSize: '0.85rem', color: 'var(--color-terracotta)', fontWeight: 600 }}>⏳ Pending Admin</span>
                       ) : t.type !== 'renew' && t.status === 'active' ? (
                         <button className={styles['action-btn']} onClick={() => handleRenew(t.id)}>
-                          Request Renewal
+                          Request renewal
                         </button>
                       ) : null}
                     </td>

@@ -143,16 +143,30 @@ export default function BookDetail() {
             <div className={styles['meta-item']}>
               <span className={styles['meta-label']}>Rating</span>
               <span className={styles['meta-value']}>
-                {book.rating > 0 ? `${Number(book.rating).toFixed(1)} / 5` : 'No ratings yet'}
+                {book.rating > 0 ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: '#fbbf24', fontSize: '14px' }}>★</span>
+                    {Number(book.rating).toFixed(1)} / 5
+                  </span>
+                ) : 'No ratings yet'}
               </span>
             </div>
             <div className={styles['meta-item']}>
               <span className={styles['meta-label']}>Available</span>
               <span className={styles['meta-value']}>
-                {isStaff ? `${book.available_copies} of ${book.total_copies} copies` : (book.available_copies > 0 ? 'Yes' : 'No')}
+                {isStaff ? (
+                  `${book.available_copies} of ${book.total_copies} copies`
+                ) : (
+                  <span style={{ 
+                    color: book.available_copies > 0 ? 'var(--color-success, #16a34a)' : 'var(--color-error, #dc2626)',
+                    fontWeight: '500'
+                  }}>
+                    {book.available_copies > 0 ? 'Yes' : 'No'}
+                  </span>
+                )}
               </span>
             </div>
-            {book.isbn && (
+            {book.isbn && !book.isbn.startsWith('GUT-') && (
               <div className={styles['meta-item']}>
                 <span className={styles['meta-label']}>ISBN</span>
                 <span className={styles['meta-value']}>{book.isbn}</span>
@@ -161,7 +175,18 @@ export default function BookDetail() {
             {book.gutenberg_id && (
               <div className={styles['meta-item']}>
                 <span className={styles['meta-label']}>E-Book</span>
-                <span className={styles['meta-value']} style={{ color: 'var(--color-success)' }}>Available</span>
+                <span className={styles['meta-value']} style={{ 
+                  color: 'var(--color-success, #16a34a)', 
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Available
+                </span>
               </div>
             )}
           </div>
@@ -171,13 +196,13 @@ export default function BookDetail() {
           )}
 
           <div className={styles['detail-actions']}>
-            {isAuthenticated && actionMsg?.type !== 'success' && (
+            {isAuthenticated && !isStaff && actionMsg?.type !== 'success' && (
               <button
                 className="btn btn-secondary"
                 onClick={handleReserve}
                 disabled={actionLoading}
               >
-                {actionLoading ? 'Processing…' : (book.available_copies > 0 ? 'Reserve Book' : 'Join Waitlist')}
+                {actionLoading ? 'Processing…' : (book.available_copies > 0 ? 'Reserve book' : 'Join waitlist')}
               </button>
             )}
             {book.gutenberg_id && (
@@ -185,12 +210,12 @@ export default function BookDetail() {
                 className="btn btn-primary"
                 onClick={() => navigate(`/app/ebooks/${book.id}/read`)}
               >
-                Read E-Book
+                Read e-book
               </button>
             )}
             {isStaff && book.available_copies > 0 && (
               <button className="btn btn-primary" onClick={() => navigate('/app/admin')}>
-                Issue to Member
+                Issue to member
               </button>
             )}
           </div>
@@ -210,7 +235,9 @@ export default function BookDetail() {
         {isAuthenticated && (
           <form className={styles['review-form']} onSubmit={handleSubmitReview}>
             <div>
-              <label className="form-label">Your Rating</label>
+              <label className="form-label">
+                Your Rating <span style={{ color: 'var(--color-error, #dc2626)', marginLeft: '2px' }}>*</span>
+              </label>
               <div className={styles['rating-input']}>
                 {[1, 2, 3, 4, 5].map(n => (
                   <button
@@ -224,6 +251,16 @@ export default function BookDetail() {
                   </button>
                 ))}
               </div>
+              {reviewRating === 0 && (
+                <p style={{ 
+                  fontSize: '12px', 
+                  color: 'var(--color-charcoal-light)', 
+                  marginTop: '4px',
+                  fontStyle: 'italic'
+                }}>
+                  Please select a rating to submit your review
+                </p>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="review-comment" className="form-label">Comment (optional)</label>
@@ -238,7 +275,7 @@ export default function BookDetail() {
               />
             </div>
             <button type="submit" className="btn btn-primary btn-sm" disabled={reviewRating < 1 || reviewSubmitting}>
-              {reviewSubmitting ? 'Submitting…' : 'Submit Review'}
+              {reviewSubmitting ? 'Submitting…' : 'Submit review'}
             </button>
           </form>
         )}

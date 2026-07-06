@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../../api/client';
 import { BookCard } from '../../components/BookCard';
 import DomeGallery from '../../components/DomeGallery';
+import { CustomSelect } from '../../components/CustomSelect';
 import { getProxiedImageUrl } from '../../utils/image';
 import styles from './Browse.module.css';
 
@@ -112,7 +113,7 @@ export default function Browse() {
 
   const domeImages = useMemo(() => {
     const covers = books.map((b, i) => {
-      const validUrl = (b.cover_image_url && b.cover_image_url.startsWith('http'))
+      const validUrl = b.cover_image_url
         ? getProxiedImageUrl(b.cover_image_url)
         : FALLBACK_COVERS[i % FALLBACK_COVERS.length].src;
       return {
@@ -156,26 +157,88 @@ export default function Browse() {
             id="browse-search"
           />
         </div>
-        <select
-          className={styles['filter-select']}
+        <CustomSelect
           value={sort}
-          onChange={(e) => { setSort(e.target.value); setPage(1); }}
-          id="browse-sort"
-          aria-label="Sort books"
-        >
-          <option value="newest">Newest First</option>
-          <option value="a_to_z">A → Z</option>
-          <option value="z_to_a">Z → A</option>
-          <option value="rating">Highest Rated</option>
-          <option value="most_borrowed">Most Borrowed</option>
-        </select>
-        <button
-          onClick={() => setViewMode(v => v === 'grid' ? 'sphere' : 'grid')}
-          className={styles['filter-select']}
-          style={{ fontWeight: viewMode === 'sphere' ? '600' : 'normal' }}
-        >
-          {viewMode === 'grid' ? '3D Sphere View' : 'Grid View'}
-        </button>
+          onChange={(val) => { setSort(val); setPage(1); }}
+          ariaLabel="Sort books"
+          options={[
+            {
+              value: 'newest',
+              label: 'Newest First',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              )
+            },
+            {
+              value: 'a_to_z',
+              label: 'Title (A → Z)',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="4" y1="6" x2="11" y2="6"/><line x1="4" y1="12" x2="11" y2="12"/><line x1="4" y1="18" x2="13" y2="18"/><polyline points="15 9 18 6 21 9"/><line x1="18" y1="6" x2="18" y2="18"/>
+                </svg>
+              )
+            },
+            {
+              value: 'z_to_a',
+              label: 'Title (Z → A)',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="4" y1="6" x2="11" y2="6"/><line x1="4" y1="12" x2="11" y2="12"/><line x1="4" y1="18" x2="13" y2="18"/><polyline points="15 15 18 18 21 15"/><line x1="18" y1="6" x2="18" y2="18"/>
+                </svg>
+              )
+            },
+            {
+              value: 'rating',
+              label: 'Highest Rated',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              )
+            },
+            {
+              value: 'most_borrowed',
+              label: 'Most Borrowed',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+                </svg>
+              )
+            }
+          ]}
+        />
+        <CustomSelect
+          value={viewMode}
+          onChange={setViewMode}
+          ariaLabel="View mode"
+          alignRight={true}
+          options={[
+            {
+              value: 'grid',
+              label: 'Grid view',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              )
+            },
+            {
+              value: 'sphere',
+              label: '3D sphere view',
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                </svg>
+              )
+            }
+          ]}
+        />
       </div>
 
       {/* Category Pills */}

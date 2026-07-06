@@ -224,20 +224,23 @@ export default function DomeGallery({
       if (enlargedOverlay && mainRef.current) {
         const mainR = mainRef.current.getBoundingClientRect();
         const isMobile = mainR.width <= 768;
+        const bookCoverWidth = 350;
+        const bookHeight = 490;
+        const openBookVisualWidth = 600;
 
         let centeredLeft, centeredTop;
         if (isMobile) {
-          centeredLeft = (mainR.width - 250) / 2;
-          centeredTop = (mainR.height - 594) / 2;
+          centeredLeft = (mainR.width - bookCoverWidth) / 2;
+          centeredTop = (mainR.height - bookHeight) / 2;
         } else {
-          centeredLeft = (mainR.width - 670) / 2;
-          centeredTop = (mainR.height - 350) / 2;
+          centeredLeft = (mainR.width - openBookVisualWidth) / 2 + 250;
+          centeredTop = (mainR.height - bookHeight) / 2;
         }
 
         enlargedOverlay.style.left = `${Math.max(10, centeredLeft)}px`;
         enlargedOverlay.style.top = `${Math.max(10, centeredTop)}px`;
-        enlargedOverlay.style.width = '250px';
-        enlargedOverlay.style.height = '350px';
+        enlargedOverlay.style.width = bookCoverWidth + 'px';
+        enlargedOverlay.style.height = bookHeight + 'px';
       }
     });
     ro.observe(root);
@@ -502,14 +505,23 @@ export default function DomeGallery({
       el.style.visibility = 'hidden';
       el.style.zIndex = 0;
 
+      // Calculate centered position for the entire open book (cover + page)
+      // When opened, the book rotates 130deg, so we need to account for the full width
+      const bookCoverWidth = 350;
+      const bookHeight = 490;
+      // When the cover rotates -130deg, it extends significantly to the left
+      // Approximate visual width of open book is about 600px
+      const openBookVisualWidth = 600;
+      
       const isMobile = mainR.width <= 768;
       let centeredLeft, centeredTop;
       if (isMobile) {
-        centeredLeft = (mainR.width - 250) / 2;
-        centeredTop = (mainR.height - 594) / 2;
+        centeredLeft = (mainR.width - bookCoverWidth) / 2;
+        centeredTop = (mainR.height - bookHeight) / 2;
       } else {
-        centeredLeft = (mainR.width - 670) / 2;
-        centeredTop = (mainR.height - 350) / 2;
+        // Shift right to center the entire visual composition
+        centeredLeft = (mainR.width - openBookVisualWidth) / 2 + 250;
+        centeredTop = (mainR.height - bookHeight) / 2;
       }
       centeredLeft = Math.max(10, centeredLeft);
       centeredTop = Math.max(10, centeredTop);
@@ -519,8 +531,8 @@ export default function DomeGallery({
       overlay.style.position = 'absolute';
       overlay.style.left = centeredLeft + 'px';
       overlay.style.top = centeredTop + 'px';
-      overlay.style.width = '250px';
-      overlay.style.height = '350px';
+      overlay.style.width = bookCoverWidth + 'px';
+      overlay.style.height = bookHeight + 'px';
       overlay.style.opacity = '0';
       overlay.style.zIndex = '30';
       overlay.style.willChange = 'transform, opacity';
@@ -534,14 +546,21 @@ export default function DomeGallery({
 
       const pageStack = document.createElement('div');
       pageStack.className = 'book-page-stack';
+      const title = item?.title || 'Classic Book';
+      const author = item?.author || '';
+      const description = item?.description || 'No description available for this book.';
+      const rating = item?.rating ? Number(item.rating).toFixed(1) : null;
+      const starsHtml = rating
+        ? `${'★'.repeat(Math.round(Number(item.rating)))}${'☆'.repeat(5 - Math.round(Number(item.rating)))}`
+        : '';
+
       pageStack.innerHTML = `
         <div class="book-page-content">
-          <h4 class="book-page-title">${item ? item.title : 'Classic Book'}</h4>
-          <p class="book-page-text">Chapter I</p>
-          <p class="book-page-text">Down the Rabbit-Hole</p>
-          <p class="book-page-text" style="font-size:10px; margin-top:8px; opacity:0.85;">
-            Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it...
-          </p>
+          <h4 class="book-page-title">${title}</h4>
+          ${author ? `<p class="book-page-author">by ${author}</p>` : ''}
+          ${rating ? `<div class="book-page-rating">${starsHtml} <span class="book-page-rating-val">(${rating})</span></div>` : ''}
+          <div class="book-page-divider"></div>
+          <p class="book-page-desc">${description}</p>
         </div>
       `;
 
@@ -570,8 +589,8 @@ export default function DomeGallery({
 
       const tx0 = tileR.left - centeredLeft;
       const ty0 = tileR.top - centeredTop;
-      const sx0 = tileR.width / 250;
-      const sy0 = tileR.height / 350;
+      const sx0 = tileR.width / 350;
+      const sy0 = tileR.height / 490;
 
       const validSx0 = isFinite(sx0) && sx0 > 0 ? sx0 : 1;
       const validSy0 = isFinite(sy0) && sy0 > 0 ? sy0 : 1;
@@ -684,24 +703,6 @@ export default function DomeGallery({
         <div className="viewer" ref={viewerRef}>
           <div ref={scrimRef} className="scrim" />
           <div ref={frameRef} className="frame" />
-          
-          {activeBook && activeBook.title && (
-            <div className="book-detail-panel">
-              <span className="destiny-tag">✨ Book Spotlight</span>
-              <h2 className="book-detail-title">{activeBook.title}</h2>
-              {activeBook.author && <h3 className="book-detail-author">by {activeBook.author}</h3>}
-              
-              {activeBook.rating && (
-                <div className="book-detail-rating">
-                  {'★'.repeat(Math.round(Number(activeBook.rating)))}
-                  {'☆'.repeat(5 - Math.round(Number(activeBook.rating)))}
-                  <span className="book-detail-rating-val">({Number(activeBook.rating).toFixed(1)})</span>
-                </div>
-              )}
-              
-              <p className="book-detail-desc">{activeBook.description}</p>
-            </div>
-          )}
         </div>
       </main>
     </div>

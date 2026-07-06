@@ -134,7 +134,7 @@ export function BookCard({ book, onLikeToggle }) {
             </span>
           )}
         </div>
-        {isAuthenticated && !reserved && (
+        {isAuthenticated && !isStaff && !reserved && (
           <button
             className="btn btn-primary btn-sm"
             style={{ width: '100%', marginTop: '10px', fontSize: '0.75rem', borderRadius: '16px', padding: '6px' }}

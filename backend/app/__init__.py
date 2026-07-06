@@ -7,7 +7,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    from .extensions import db, migrate, jwt, cors, mail, scheduler, limiter, talisman
+    from .extensions import db, migrate, jwt, cors, mail, scheduler, limiter, talisman, cache
     
     # Initialize Flask extensions here
     db.init_app(app)
@@ -20,6 +20,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     limiter.init_app(app)
     talisman.init_app(app, force_https=False)  # Allow HTTP for local dev
+    cache.init_app(app)
     
     # Initialize APScheduler only if not testing
     if not app.config.get('TESTING'):

@@ -15,10 +15,13 @@ import Profile from './pages/Profile/Profile';
 import Restricted from './pages/Restricted';
 import BookDomeGallery from './pages/Gallery/BookDomeGallery';
 import MysteryDraw from './pages/MysteryDraw/MysteryDraw';
+import BaristaCompanion from './components/Barista/BaristaCompanion';
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <BaristaCompanion />
+      <Routes>
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -59,5 +62,6 @@ export default function App() {
         <Route path="restricted" element={<Restricted />} />
       </Route>
     </Routes>
+    </>
   );
 }

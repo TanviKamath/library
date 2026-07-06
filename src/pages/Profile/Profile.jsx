@@ -92,9 +92,9 @@ export default function Profile() {
           <h1>{user?.full_name || user?.username}</h1>
           <div className={styles['profile-header-meta']}>
             <span className={styles['role-badge']}>{user?.role}</span>
-            <span className={styles['member-since']}>
-              Member since {formatDate(user?.created_at)}
-            </span>
+            {user?.role !== 'admin' && user?.role !== 'librarian' && (
+              <span className={styles['member-since']}>Since {formatDate(user?.created_at)}</span>
+            )}
           </div>
         </div>
       </div>
@@ -157,16 +157,20 @@ export default function Profile() {
                 <span className={styles['info-label']}>Role</span>
                 <span className={styles['info-value']} style={{ textTransform: 'capitalize' }}>{user?.role}</span>
               </div>
-              <div className={styles['info-item']}>
-                <span className={styles['info-label']}>Membership Status</span>
-                <span className={styles['info-value']} style={{ textTransform: 'capitalize' }}>{user?.membership_status}</span>
-              </div>
-              <div className={styles['info-item']}>
-                <span className={styles['info-label']}>Membership Expires</span>
-                <span className={styles['info-value']}>{formatDate(user?.membership_expires_at)}</span>
-              </div>
+              {user?.role !== 'admin' && user?.role !== 'librarian' && (
+                <>
+                  <div className={styles['info-item']}>
+                    <span className={styles['info-label']}>Membership Status</span>
+                    <span className={styles['info-value']} style={{ textTransform: 'capitalize' }}>{user?.membership_status}</span>
+                  </div>
+                  <div className={styles['info-item']}>
+                    <span className={styles['info-label']}>Membership Expires</span>
+                    <span className={styles['info-value']}>{formatDate(user?.membership_expires_at)}</span>
+                  </div>
+                </>
+              )}
             </div>
-            <button className="btn btn-secondary btn-sm" style={{ marginTop: 'var(--space-5)' }} onClick={() => setEditMode(true)}>
+            <button className="btn btn-secondary btn-sm" style={{ marginTop: 'var(--space-3)' }} onClick={() => setEditMode(true)}>
               Edit Profile
             </button>
           </>

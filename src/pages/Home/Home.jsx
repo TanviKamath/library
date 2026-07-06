@@ -120,7 +120,8 @@ export default function Home() {
                       </svg>
                     </Link>
                     <Link to="/gallery" className={styles['hero-btn-secondary']}>
-                      🌐 Enter 3D Library
+                      
+                      Enter 3D Library
                     </Link>
                   </>
                 ) : (

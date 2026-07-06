@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import styles from './AdminPanel.module.css';
@@ -76,7 +77,7 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, se
               <select
                 value={sort}
                 onChange={e => onSortChange(e.target.value)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 500, color: 'var(--color-espresso)', cursor: 'pointer', paddingRight: '4px' }}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 500, color: 'var(--color-espresso)', cursor: 'pointer', paddingRight: '22px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'10\' height=\'6\' viewBox=\'0 0 10 6\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1L5 5L9 1\' stroke=\'%235c4f4a\' stroke-width=\'1.6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center' }}
               >
                 {sortOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -89,7 +90,7 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, se
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {onTemplate && (
             <button className="btn btn-secondary btn-sm" onClick={onTemplate} title="Download CSV template">
-              Get Template
+              Get template
             </button>
           )}
           {onImport && (
@@ -112,7 +113,12 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, se
 
 export default function AdminPanel() {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState('transactions');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') || 'transactions';
+
+  function setTab(t) {
+    setSearchParams({ tab: t });
+  }
 
   return (
     <div className={styles.admin}>
@@ -120,7 +126,7 @@ export default function AdminPanel() {
       <p>Manage library resources, members, and transactions.</p>
 
       <div className={styles.tabs}>
-        {['transactions', 'books', 'members', 'categories', 'reservations', 'fines', 'logbook'].map(t => (
+        {['transactions', 'books', 'members', 'categories', 'reservations', 'fines', 'logbook', ...(isAdmin ? ['settings'] : [])].map(t => (
           <button key={t} className={`${styles.tab} ${tab === t ? styles.active : ''}`} onClick={() => setTab(t)}>
             {t === 'logbook' ? 'Log Book' : t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
@@ -134,6 +140,7 @@ export default function AdminPanel() {
       {tab === 'reservations' && <ReservationsTab />}
       {tab === 'fines' && <FinesTab />}
       {tab === 'logbook' && <LogBookTab />}
+      {tab === 'settings' && isAdmin && <SettingsTab />}
     </div>
   );
 }
@@ -165,7 +172,7 @@ function TransactionsTab() {
       const [txns, mems, bks] = await Promise.all([
         api.get('/transactions'),
         api.get('/members'),
-        api.get('/books?limit=200'),
+        api.get('/books?limit=1000'),
       ]);
       setTransactions(Array.isArray(txns) ? txns : []);
       setMembers(Array.isArray(mems) ? mems : []);
@@ -218,12 +225,13 @@ function TransactionsTab() {
 
   function getPendingFine(t) {
     if (t.fine_paid) return 0;
+    if (t.fine_amount > 0) return t.fine_amount;
     const due = new Date(t.due_date);
     const now = new Date();
-    if (now > due) {
+    if (t.status === 'overdue' || now > due) {
       const diffTime = now - due;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? diffDays * 10 : 0;
+      const diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 1;
+      return Math.max(1, diffDays) * 10;
     }
     return 0;
   }
@@ -303,7 +311,7 @@ function TransactionsTab() {
           { value: 'za_member', label: 'Member Name (Z-A)' },
         ]}
       >
-        <button className="btn btn-primary btn-sm" onClick={() => setShowIssueModal(true)}>+ Issue Book</button>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowIssueModal(true)}>+ Issue book</button>
       </CSVToolbar>
 
       {/* Pending Renewal Requests */}
@@ -316,13 +324,12 @@ function TransactionsTab() {
             data={renewalRequests}
             empty="No renewal requests."
             columns={[
-              { key: 'id', header: 'ID' },
               { key: 'book_title', header: 'Book', render: t => <span style={{ fontWeight: 600, color: 'var(--color-espresso)' }}>{t.book_title}</span> },
               { key: 'user_name', header: 'Member' },
               { key: 'due_date', header: 'Original Due', render: t => formatDate(t.due_date) },
               { key: 'actions', header: 'Actions', render: t => (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-primary btn-sm" onClick={() => handleApproveRenewal(t.id)}>Accept (+14 Days)</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => handleApproveRenewal(t.id)}>Accept (+14 days)</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => handleRejectRenewal(t.id)}>Reject</button>
                 </div>
               )},
@@ -337,7 +344,6 @@ function TransactionsTab() {
           data={active}
           empty="No active transactions."
           columns={[
-            { key: 'id', header: 'ID' },
             { key: 'book_title', header: 'Book', render: t => <span style={{ fontWeight: 500 }}>{t.book_title}</span> },
             { key: 'user_name', header: 'Member' },
             { key: 'issued_at', header: 'Issued', render: t => formatDate(t.issued_at) },
@@ -402,7 +408,7 @@ function BooksTab() {
     setLoading(true);
     try {
       const [bks, cats] = await Promise.all([
-        api.get('/books?limit=200'),
+        api.get('/books?limit=1000'),
         api.get('/categories'),
       ]);
       setBooks(bks.books || []);
@@ -519,7 +525,7 @@ function BooksTab() {
         ]}
       >
         <button className="btn btn-primary btn-sm" onClick={() => { setEditBook(null); setShowForm(true); }}>
-          + Add Book
+          + Add book
         </button>
       </CSVToolbar>
 
@@ -528,7 +534,6 @@ function BooksTab() {
         data={displayedBooks}
         empty="No books found."
         columns={[
-          { key: 'id', header: 'ID' },
           { key: 'title', header: 'Title', render: b => <span style={{ fontWeight: 500, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{b.title}</span> },
           { key: 'author_name', header: 'Author' },
           { key: 'category_name', header: 'Category' },
@@ -624,7 +629,7 @@ function BookFormModal({ book, categories, onSave, onClose }) {
           </div>
           <div className={styles['modal-actions']}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">{book ? 'Save Changes' : 'Create Book'}</button>
+            <button type="submit" className="btn btn-primary">{book ? 'Save changes' : 'Create book'}</button>
           </div>
         </form>
       </div>
@@ -752,7 +757,7 @@ function MembersTab({ isAdmin }) {
           { value: 'za_username', label: 'Username (Z-A)' },
         ]}
       >
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add Member</button>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add member</button>
       </CSVToolbar>
 
       <h3 style={{ marginBottom: 'var(--space-4)' }}>Registered Members ({displayedMembers.length})</h3>
@@ -760,7 +765,6 @@ function MembersTab({ isAdmin }) {
         data={displayedMembers}
         empty="No members found."
         columns={[
-          { key: 'id', header: 'ID' },
           { key: 'full_name', header: 'Name', render: m => <span style={{ fontWeight: 500 }}>{m.full_name}</span> },
           { key: 'username', header: 'Username' },
           { key: 'email', header: 'Email' },
@@ -916,7 +920,7 @@ function MemberFormModal({ onSave, onClose }) {
           {/* Actions */}
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Create Member</button>
+            <button type="submit" className="btn btn-primary">Create member</button>
           </div>
         </form>
       </div>
@@ -924,31 +928,269 @@ function MemberFormModal({ onSave, onClose }) {
   );
 }
 
+function SearchableDropdown({ label, options, value, onChange, placeholder, renderOption, searchPlaceholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const safeOptions = Array.isArray(options) ? options : [];
+  const selectedOption = safeOptions.find(o => o && o.id !== undefined && o.id !== null && String(o.id) === String(value || ''));
+
+  const filteredOptions = safeOptions.filter(o => {
+    if (!o) return false;
+    if (!query || !query.trim()) return true;
+    const q = query.toLowerCase().trim();
+    return (
+      (o.title && String(o.title).toLowerCase().includes(q)) ||
+      (o.author && String(o.author).toLowerCase().includes(q)) ||
+      (o.full_name && String(o.full_name).toLowerCase().includes(q)) ||
+      (o.username && String(o.username).toLowerCase().includes(q)) ||
+      (o.email && String(o.email).toLowerCase().includes(q))
+    );
+  });
+
+  return (
+    <div className="form-group" ref={dropdownRef} style={{ position: 'relative', marginBottom: 'var(--space-4)' }}>
+      <label className="form-label">{label}</label>
+      
+      <div
+        className="input"
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) setQuery('');
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          background: isOpen ? 'var(--color-parchment-bg, #fdfbfa)' : 'var(--color-white, #ffffff)',
+          borderColor: isOpen ? 'var(--color-terracotta, #c86d51)' : 'var(--color-divider, #e5ded8)',
+          boxShadow: isOpen ? '0 0 0 3px rgba(200, 109, 81, 0.15)' : 'none',
+          userSelect: 'none',
+          minHeight: '44px',
+          padding: '8px 14px'
+        }}
+      >
+        <span style={{ color: selectedOption ? 'var(--color-espresso, #2d2420)' : 'var(--color-charcoal-light, #8c827a)', fontWeight: selectedOption ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px', flex: 1 }}>
+          {selectedOption ? (renderOption ? renderOption(selectedOption, true) : (selectedOption.title || selectedOption.full_name || 'Selected')) : placeholder}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {selectedOption && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('');
+              }}
+              style={{ color: '#9ca3af', cursor: 'pointer', padding: '2px 6px', display: 'inline-flex', alignItems: 'center', borderRadius: '50%', fontSize: '14px', transition: 'color 0.15s' }}
+              title="Clear selection"
+              onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+              onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+            >
+              ✕
+            </span>
+          )}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--color-charcoal-light)' }}>
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            marginTop: '6px',
+            background: '#ffffff',
+            border: '1px solid var(--color-divider, #e5ded8)',
+            borderRadius: 'var(--radius-md, 10px)',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1)',
+            zIndex: 1100,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '260px',
+            animation: 'fadeIn 0.15s ease'
+          }}
+        >
+          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--color-divider, #e5ded8)', background: '#faf8f5', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8c827a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              placeholder={searchPlaceholder || "Search..."}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              autoFocus
+              style={{
+                border: 'none',
+                background: 'transparent',
+                outline: 'none',
+                width: '100%',
+                fontSize: '13.5px',
+                color: 'var(--color-espresso, #2d2420)'
+              }}
+            />
+            {query && (
+              <span onClick={() => setQuery('')} style={{ cursor: 'pointer', color: '#9ca3af', fontSize: '13px' }}>✕</span>
+            )}
+          </div>
+
+          <div style={{ overflowY: 'auto', flex: 1, padding: '4px' }}>
+            {filteredOptions.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#8c827a', fontSize: '13.5px' }}>
+                No matches found.
+              </div>
+            ) : (
+              filteredOptions.map(o => {
+                const isSelected = String(o.id) === String(value);
+                const isDisabled = o.available_copies !== undefined && o.available_copies <= 0;
+                return (
+                  <div
+                    key={o.id}
+                    onClick={() => {
+                      if (isDisabled) return;
+                      onChange(o.id);
+                      setIsOpen(false);
+                    }}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      background: isSelected ? 'var(--color-terracotta-bg, #fde8e8)' : 'transparent',
+                      color: isDisabled ? '#9ca3af' : isSelected ? 'var(--color-terracotta, #c86d51)' : 'var(--color-espresso, #2d2420)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '10px',
+                      transition: 'background 0.15s ease',
+                      opacity: isDisabled ? 0.6 : 1,
+                      borderBottom: '1px solid rgba(0,0,0,0.03)'
+                    }}
+                    onMouseEnter={e => {
+                      if (!isDisabled && !isSelected) e.currentTarget.style.background = '#f5f0ec';
+                    }}
+                    onMouseLeave={e => {
+                      if (!isDisabled && !isSelected) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    {renderOption ? renderOption(o, false) : (
+                      <span>{o.title || o.full_name || 'Option'}</span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUserId, setIssueUserId, onSubmit, onClose }) {
+  const [error, setError] = useState(null);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!issueBookId) {
+      setError('Please select a book to issue.');
+      return;
+    }
+    if (!issueUserId) {
+      setError('Please select a member.');
+      return;
+    }
+    setError(null);
+    onSubmit(e);
+  }
+
   return (
     <div className={styles['modal-overlay']} onClick={onClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ overflow: 'visible', maxWidth: '560px' }}>
         <h2>Issue a Book</h2>
-        <form className={styles['modal-form']} onSubmit={onSubmit}>
-          <div className="form-group">
-            <label htmlFor="modal-issue-book" className="form-label">Book</label>
-            <select id="modal-issue-book" className="input" value={issueBookId} onChange={e => setIssueBookId(e.target.value)} required>
-              <option value="">Select a book…</option>
-              {books.filter(b => b.available_copies > 0).map(b => (
-                <option key={b.id} value={b.id}>{b.title} ({b.available_copies} available)</option>
-              ))}
-            </select>
+        {error && (
+          <div style={{ padding: '10px 14px', background: '#fee2e2', color: '#991b1b', borderRadius: '8px', fontSize: '13.5px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #f87171' }}>
+            <span>⚠️</span> <span>{error}</span>
           </div>
-          <div className="form-group">
-            <label htmlFor="modal-issue-member" className="form-label">Member</label>
-            <select id="modal-issue-member" className="input" value={issueUserId} onChange={e => setIssueUserId(e.target.value)} required>
-              <option value="">Select a member…</option>
-              {members.map(m => <option key={m.id} value={m.id}>{m.full_name} ({m.username})</option>)}
-            </select>
-          </div>
-          <div className={styles['modal-actions']}>
+        )}
+        <form className={styles['modal-form']} onSubmit={handleSubmit} style={{ overflow: 'visible' }}>
+          <SearchableDropdown
+            label="Book"
+            placeholder="Select a book…"
+            searchPlaceholder="Search by book title or author…"
+            options={books}
+            value={issueBookId}
+            onChange={setIssueBookId}
+            renderOption={(b, isSelectedTrigger) => !b ? null : isSelectedTrigger ? (
+              <span>{b.title || 'Untitled Book'} <strong style={{ color: '#16a34a', fontWeight: 600 }}>({b.available_copies ?? 0} available)</strong></span>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justify: 'space-between', width: '100%', gap: '8px' }}>
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 600, fontSize: '13.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title || 'Untitled Book'}</div>
+                  {b.author && <div style={{ fontSize: '11.5px', color: '#8c827a' }}>by {b.author}</div>}
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  flexShrink: 0,
+                  background: (b.available_copies ?? 0) > 0 ? '#dcfce7' : '#fee2e2',
+                  color: (b.available_copies ?? 0) > 0 ? '#166534' : '#991b1b'
+                }}>
+                  {(b.available_copies ?? 0) > 0 ? `${b.available_copies} available` : 'Out of stock'}
+                </span>
+              </div>
+            )}
+          />
+
+          <SearchableDropdown
+            label="Member"
+            placeholder="Select a member…"
+            searchPlaceholder="Search by member name, username, or email…"
+            options={members}
+            value={issueUserId}
+            onChange={setIssueUserId}
+            renderOption={(m, isSelectedTrigger) => !m ? null : isSelectedTrigger ? (
+              <span>{m.full_name || m.username || 'Member'} <span style={{ color: '#8c827a' }}>({m.username ? `@${m.username}` : ''})</span></span>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justify: 'space-between', width: '100%', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-terracotta, #c86d51)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, flexShrink: 0 }}>
+                    {(m.full_name || m.username || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 600, fontSize: '13.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.full_name || m.username || 'Unnamed Member'}</div>
+                    <div style={{ fontSize: '11.5px', color: '#8c827a' }}>{m.username ? `@${m.username}` : ''} {m.email ? `• ${m.email}` : ''}</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'capitalize', padding: '2px 8px', borderRadius: '12px', background: '#f0fdf4', color: '#166534', flexShrink: 0 }}>
+                  {m.role || 'member'}
+                </span>
+              </div>
+            )}
+          />
+
+          <div className={styles['modal-actions']} style={{ marginTop: 'var(--space-2)' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Issue Book</button>
+            <button type="submit" className="btn btn-primary">Issue book</button>
           </div>
         </form>
       </div>
@@ -968,7 +1210,7 @@ function CategoryFormModal({ newName, setNewName, onSubmit, onClose }) {
           </div>
           <div className={styles['modal-actions']}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Add Category</button>
+            <button type="submit" className="btn btn-primary">Add category</button>
           </div>
         </form>
       </div>
@@ -1096,7 +1338,7 @@ function CategoriesTab({ isAdmin }) {
           { value: 'books_low', label: 'Fewest Books' },
         ]}
       >
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add Category</button>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add category</button>
       </CSVToolbar>
 
       <h3 style={{ marginBottom: 'var(--space-4)' }}>Book Categories ({displayedCategories.length})</h3>
@@ -1104,7 +1346,6 @@ function CategoriesTab({ isAdmin }) {
         data={displayedCategories}
         empty="No categories found."
         columns={[
-          { key: 'id', header: 'ID' },
           { key: 'name', header: 'Name', render: c => <span style={{ fontWeight: 500 }}>{c.name}</span> },
           { key: 'book_count', header: 'Books', render: c => c.book_count || 0 },
           { key: 'actions', header: 'Actions', render: c => (
@@ -1267,7 +1508,6 @@ function ReservationsTab() {
           data={activeReservations}
           empty="No active reservations."
           columns={[
-            { key: 'id', header: 'ID' },
             { key: 'book_title', header: 'Book', render: r => <span style={{ fontWeight: 500 }}>{r.book_title}</span> },
             { key: 'user_name', header: 'Member Name' },
             { key: 'created_at', header: 'Joined Waitlist', render: r => formatDate(r.created_at) },
@@ -1280,7 +1520,7 @@ function ReservationsTab() {
             )},
             { key: 'ready_at', header: 'Ready Since', render: r => r.ready_at ? formatDate(r.ready_at) : '—' },
             { key: 'actions', header: 'Actions', render: r => r.status === 'ready'
-              ? <button className="btn btn-primary btn-sm" onClick={() => handleIssueBook(r)}>Issue Book</button>
+              ? <button className="btn btn-primary btn-sm" onClick={() => handleIssueBook(r)}>Issue book</button>
               : <span style={{ color: 'var(--color-charcoal-light)', fontStyle: 'italic', fontSize: '0.85rem' }}>Waiting</span>
             },
           ]}
@@ -1293,7 +1533,6 @@ function ReservationsTab() {
             data={pastReservations.slice(0, 20)}
             empty="No reservation history."
             columns={[
-              { key: 'id', header: 'ID' },
               { key: 'book_title', header: 'Book' },
               { key: 'user_name', header: 'Member Name' },
               { key: 'created_at', header: 'Joined Waitlist', render: r => formatDate(r.created_at) },
@@ -1425,7 +1664,6 @@ function FinesTab() {
           <thead>
             <tr>
               <th>Sr. No.</th>
-              <th>Txn ID</th>
               <th>Book</th>
               <th>Member Name</th>
               <th>Due Date</th>
@@ -1438,7 +1676,6 @@ function FinesTab() {
             {displayedFines.map((f, i) => (
               <tr key={f.id}>
                 <td style={{ color: 'var(--color-charcoal-light)', width: 40 }}>{i + 1}</td>
-                <td>{f.id}</td>
                 <td style={{ fontWeight: 500 }}>{f.book_title}</td>
                 <td>{f.user_name}</td>
                 <td>{formatDate(f.due_date)}</td>
@@ -1635,7 +1872,6 @@ function LogBookTab() {
           <thead>
             <tr>
               <th>Sr. No.</th>
-              <th>ID</th>
               <th>User</th>
               <th>Action</th>
               <th>Details</th>
@@ -1646,7 +1882,6 @@ function LogBookTab() {
             {displayedLogs.map((log, i) => (
               <tr key={log.id}>
                 <td style={{ color: 'var(--color-charcoal-light)', width: 40 }}>{(page - 1) * 20 + i + 1}</td>
-                <td>{log.id}</td>
                 <td>{log.user_name}</td>
                 <td><span className={styles.badge}>{getActionLabel(log.action)}</span></td>
                 <td>{log.details}</td>
@@ -1685,6 +1920,103 @@ function LogBookTab() {
           </button>
         </div>
       )}
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   SETTINGS TAB — Library Configuration
+   ═══════════════════════════════════════════ */
+function SettingsTab() {
+  const [fineRate, setFineRate] = useState('');
+  const [savedRate, setSavedRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await api.get('/settings');
+        const rate = data.fine_rate_per_day ?? '10';
+        setSavedRate(rate);
+        setFineRate(rate);
+      } catch { /* */ }
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    const val = parseFloat(fineRate);
+    if (isNaN(val) || val < 0) {
+      setMsg({ type: 'error', text: 'Please enter a valid non-negative number.' });
+      return;
+    }
+    setSaving(true);
+    setMsg(null);
+    try {
+      await api.put('/settings', { fine_rate_per_day: String(val) });
+      setSavedRate(String(val));
+      setMsg({ type: 'success', text: `Fine rate updated to ₹${val}/day.` });
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message || 'Failed to save settings.' });
+    }
+    setSaving(false);
+  }
+
+  if (loading) return <div className={styles['empty-state']}><p>Loading settings…</p></div>;
+
+  return (
+    <>
+      {msg && <div className={`${styles.msg} ${styles[`msg-${msg.type}`]}`}>{msg.text}</div>}
+
+      <div style={{ maxWidth: 520 }}>
+        <h3 style={{ marginBottom: 'var(--space-2)', fontSize: 'var(--fs-lg)' }}>Library Settings</h3>
+        <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)', marginBottom: 'var(--space-6)' }}>
+          Configure global library parameters. Changes take effect immediately for all new calculations.
+        </p>
+
+        <div style={{ background: 'var(--color-ivory)', border: '1px solid var(--color-divider)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-6)' }}>
+          <h4 style={{ fontSize: 'var(--fs-md)', marginBottom: 'var(--space-1)', color: 'var(--color-espresso)' }}>
+            Fine Rate
+          </h4>
+          <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)', marginBottom: 'var(--space-5)' }}>
+            Currently: <strong style={{ color: 'var(--color-espresso)' }}>₹{savedRate} per day</strong> after the due date.
+          </p>
+
+          <form onSubmit={handleSave} style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
+            <div className="form-group" style={{ margin: 0, flex: 1 }}>
+              <label htmlFor="fine-rate" className="form-label" style={{ marginBottom: 'var(--space-2)', display: 'block' }}>
+                Fine rate (₹ per overdue day)
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: 'var(--fs-md)', color: 'var(--color-charcoal-light)' }}>₹</span>
+                <input
+                  id="fine-rate"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  className="input"
+                  value={fineRate}
+                  onChange={e => setFineRate(e.target.value)}
+                  style={{ maxWidth: 120 }}
+                  required
+                />
+                <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)' }}>/ day</span>
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={saving || fineRate === savedRate}
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+          </form>
+        </div>
+      </div>
     </>
   );
 }

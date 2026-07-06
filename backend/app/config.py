@@ -39,3 +39,6 @@ class Config:
     # Rate limiting configuration
     RATELIMIT_ENABLED = False
     RATELIMIT_DEFAULT = "1000000 per day; 100000 per hour"
+    # Flask-Caching defaults – Simple in‑memory cache for dev/testing
+    CACHE_TYPE = "SimpleCache"
+    CACHE_DEFAULT_TIMEOUT = 300

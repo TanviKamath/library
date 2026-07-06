@@ -78,12 +78,37 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: var(--space-8);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.filter-select:hover {
+  border-color: var(--color-terracotta);
+  background: var(--color-cream-light);
 }
 
 .filter-select:focus {
   outline: none;
   border-color: var(--color-terracotta);
-  box-shadow: 0 0 0 3px var(--color-terracotta-bg);
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.1);
+}
+
+/* Style dropdown options */
+.filter-select option {
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  padding: var(--space-3);
+  font-size: var(--fs-sm);
+}
+
+.filter-select option:hover,
+.filter-select option:checked {
+  background: var(--color-terracotta);
+  color: var(--color-white);
+}
+
+.filter-select option:focus {
+  background: var(--color-cream-dark);
+  outline: none;
 }
 
 /* ── Category Pills ── */

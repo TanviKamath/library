@@ -5,6 +5,7 @@ from collections import defaultdict
 from app.api import bp
 from app.models import Book, Transaction
 from app.models.like import UserBookLike
+from app.services.event import get_today_events, EVENT_WEIGHT
 
 @bp.route('/books/recommendations', methods=['GET'])
 @jwt_required()
@@ -85,7 +86,7 @@ def get_recommendations():
     # 5. Merge and Score
     final_scores = {}
     all_candidates_dict = {}
-    
+
     for b in content_candidates:
         all_candidates_dict[b.id] = b
         score = 0
@@ -94,6 +95,25 @@ def get_recommendations():
         if b.author_id in author_scores:
             score += author_scores[b.author_id]
         final_scores[b.id] = score
+
+    # ---- Event‑based boost -------------------------------------------------
+    # Pull today’s events (Google Calendar) and boost books whose title or
+    # description contains any of the event keywords.
+    try:
+        today_events = get_today_events()
+        event_keywords = {kw for ev in today_events for kw in ev.get("keywords", [])}
+        for b in content_candidates:
+            title_words = set(b.title.lower().split())
+            desc_words = set((b.description or "").lower().split())
+            matches = event_keywords & (title_words | desc_words)
+            if matches:
+                final_scores[b.id] += EVENT_WEIGHT * len(matches)
+    except Exception as e:
+        # If the external service fails we don’t want to break recommendations.
+        # Log the error (Flask's logger) and continue without the boost.
+        from flask import current_app
+        current_app.logger.error(f"Event boost failed: {e}")
+    # ----------------------------------------------------------------------
         
     if collab_book_scores:
         # Fetch collab books not already in content_candidates

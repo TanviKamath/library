@@ -26,7 +26,7 @@ export default function BookDomeGallery() {
         const data = await api.get('/books?limit=100');
         const bookList = data.books || [];
         const covers = bookList.map((b, i) => {
-          const validUrl = (b.cover_image_url && b.cover_image_url.startsWith('http'))
+          const validUrl = b.cover_image_url
             ? getProxiedImageUrl(b.cover_image_url)
             : FALLBACK_COVERS[i % FALLBACK_COVERS.length].src;
           return {

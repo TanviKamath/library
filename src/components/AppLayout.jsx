@@ -5,7 +5,8 @@ import styles from './AppLayout.module.css';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => {
-    return localStorage.getItem('sidebar-collapsed') === 'true';
+    const saved = localStorage.getItem('sidebar-collapsed');
+    return saved !== null ? saved === 'true' : true;
   });
 
   const toggleCollapse = () => {

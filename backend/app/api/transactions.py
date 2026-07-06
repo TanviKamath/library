@@ -11,6 +11,13 @@ from flask import current_app
 from app.utils.decorators import role_required
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import joinedload
+from app.api.settings import get_setting
+
+def _fine_rate():
+    try:
+        return float(get_setting('fine_rate_per_day'))
+    except (TypeError, ValueError):
+        return 10.0
 
 @bp.route('/transactions', methods=['GET'])
 @role_required('admin', 'librarian')
@@ -120,6 +127,15 @@ def issue_book():
     )
 
     db.session.add(txn)
+
+    if user and book:
+        act_log = ActivityLog(
+            user_id=user_id,
+            action='issue',
+            details=f"Book '{book.title}' issued to member {user.full_name or user.username}."
+        )
+        db.session.add(act_log)
+
     db.session.commit()
 
     # Send checkout confirmation email
@@ -149,21 +165,18 @@ def return_book():
         return jsonify({'error': 'Invalid transaction'}), 400
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    
-    # Enforce overdue fine payment before return completes
-    has_unpaid_fine = False
-    if txn.fine_amount > 0 and not txn.fine_paid:
-        has_unpaid_fine = True
-    elif now > txn.due_date and not txn.fine_paid:
-        days_overdue = (now - txn.due_date).days
-        if days_overdue > 0:
-            txn.fine_amount = days_overdue * 10.0
-            txn.status = 'overdue'
-            db.session.commit()
-            has_unpaid_fine = True
+    rate = _fine_rate()
 
-    if has_unpaid_fine:
-        return jsonify({'error': f'Cannot return book with unpaid fine of ₹{txn.fine_amount}. Please collect payment first.'}), 400
+    # Compute overdue fine if applicable (but allow return with unpaid fine)
+    if not txn.fine_paid:
+        import math
+        if txn.status == 'overdue' or now > txn.due_date:
+            secs = (now - txn.due_date).total_seconds() if now > txn.due_date else 0
+            days_overdue = max(1, int(math.ceil(secs / 86400))) if (secs > 0 or txn.status == 'overdue') else 0
+            if days_overdue > 0:
+                txn.fine_amount = max(txn.fine_amount or 0.0, days_overdue * rate)
+                txn.status = 'overdue'
+                db.session.commit()
 
     txn.returned_at = now
     txn.status = 'returned'
@@ -195,6 +208,15 @@ def return_book():
                 print(f"Failed to send waitlist email: {e}")
         else:
             book.available_copies += 1
+
+    return_user = User.query.get(txn.user_id)
+    if return_user and book:
+        act_log = ActivityLog(
+            user_id=txn.user_id,
+            action='return',
+            details=f"Book '{book.title}' returned by member {return_user.full_name or return_user.username}."
+        )
+        db.session.add(act_log)
 
     db.session.commit()
     return jsonify(txn.to_dict()), 200

@@ -1,0 +1,483 @@
+/* ========================================
+   FLOATING TRIGGER BUTTON
+   ======================================== */
+.companionContainer {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+}
+
+.floatingTrigger {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 3px solid #8B5A2B;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(139, 90, 43, 0.15);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+  background-color: #fdfbf7;
+}
+
+.floatingTrigger:hover {
+  transform: scale(1.12);
+  box-shadow: 0 8px 30px rgba(139, 90, 43, 0.5), 0 0 0 4px rgba(139, 90, 43, 0.25);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.steamBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #8B5A2B, #5c3a21);
+  color: white;
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: steamFloat 2s infinite ease-in-out;
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+
+@keyframes steamFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ========================================
+   CINEMATIC FULL-SCREEN OVERLAY
+   ======================================== */
+.rpgOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    rgba(25, 18, 14, 0.78) 0%,
+    rgba(12, 8, 5, 0.96) 100%
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  /* Side-by-side layout */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end; /* Align sprite to bottom */
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.rpgOverlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ========================================
+   CLOSE BUTTON
+   ======================================== */
+.closeButton {
+  position: absolute;
+  top: 1.5rem;
+  right: 2rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 100050;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* ========================================
+   CHARACTER SPRITE — left column
+   With lifelike speaking and breathing animations
+   ======================================== */
+.characterContainer {
+  flex-shrink: 0;
+  width: 38vw;
+  height: 94vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.rpgOverlay.open .characterContainer {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.characterSprite {
+  max-height: 96%;
+  max-width: 95%;
+  object-fit: contain;
+  filter: drop-shadow(10px 10px 30px rgba(0,0,0,0.7));
+  transform-origin: bottom center;
+}
+
+/* Natural Idle Breathing Animation */
+@keyframes breathing {
+  0%, 100% { transform: scaleY(1) scaleX(1) translateY(0); }
+  50% { transform: scaleY(1.01) scaleX(0.995) translateY(-6px); }
+}
+
+.idle .characterSprite {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+/* Natural, Expressive Talking Animation (Smooth & Warm) */
+@keyframes talking {
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1) rotate(0deg); }
+  33% { transform: translateY(-4px) scaleY(1.006) scaleX(0.997) rotate(-0.15deg); }
+  66% { transform: translateY(-1.5px) scaleY(1.002) scaleX(0.999) rotate(0.1deg); }
+}
+
+.speaking .characterSprite {
+  animation: talking 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px rgba(216, 150, 80, 0.35)) drop-shadow(10px 10px 30px rgba(0,0,0,0.7));
+}
+
+/* ========================================
+   DIALOGUE AREA — right column
+   ======================================== */
+.dialogueWrapper {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  max-height: 100vh;
+  padding: 4.2rem 4rem 2.5rem 1.5rem;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Align from top safely below close button */
+  gap: 1.2rem;
+  z-index: 10001;
+  overflow-y: auto;
+}
+
+/* ========================================
+   SPEECH BUBBLE BOX (Pop-in animation)
+   ======================================== */
+@keyframes bubblePop {
+  0% { opacity: 0; transform: scale(0.92) translateX(-15px); }
+  100% { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+.dialogueBox {
+  /* Warm creamy speech bubble */
+  background: #FFFDF7;
+  border: 3.5px solid #8B5A2B;
+  border-radius: 30px;
+  padding: 2.3rem 3rem 2.1rem;
+  margin-top: 1.8rem;
+  position: relative;
+  box-shadow: 
+    0 18px 45px rgba(0,0,0,0.5),
+    inset 0 0 25px rgba(139, 90, 43, 0.08);
+  color: #2C1810;
+  flex-shrink: 0;
+  max-width: 92%;
+  align-self: flex-start; /* Sit snugly on the left side facing Finn */
+  animation: bubblePop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* SPEECH BUBBLE TAIL (Border layer pointing down-left at Finn's face) */
+.dialogueBox::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 55px; /* Aligned perfectly with his mouth/cheek */
+  width: 0;
+  height: 0;
+  border-top: 18px solid transparent;
+  border-right: 28px solid #8B5A2B;
+  border-bottom: 18px solid transparent;
+}
+
+/* SPEECH BUBBLE TAIL (Inner cream layer pointing down-left at Finn's face) */
+.dialogueBox::after {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 57px;
+  width: 0;
+  height: 0;
+  border-top: 16px solid transparent;
+  border-right: 24px solid #FFFDF7;
+  border-bottom: 16px solid transparent;
+}
+
+.speakerName {
+  position: absolute;
+  top: -16px;
+  left: 32px;
+  background: #8B5A2B;
+  border: 2px solid #FFFDF7;
+  color: #FFFDF7;
+  padding: 5px 22px;
+  border-radius: 20px;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  text-transform: uppercase;
+  z-index: 10;
+}
+
+.dialogueText {
+  font-size: 1.35rem;
+  line-height: 1.68;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: #2C1810;
+  font-weight: 500;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Blinking cursor */
+.cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1.1em;
+  background: #8B5A2B;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ========================================
+   RECOMMENDATION CARD
+   ======================================== */
+.recommendationCard {
+  display: flex;
+  gap: 1.5rem;
+  background: #F4EBE1;
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 2px solid #D8C3A5;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+  max-width: 92%;
+  align-self: flex-start;
+}
+
+.bookCover {
+  width: 95px;
+  height: 145px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  border: 1px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  background: #E8D8C8;
+}
+
+.bookCoverPlaceholder {
+  width: 95px;
+  height: 145px;
+  border-radius: 8px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  border: 1px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.5rem;
+  color: white;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.bookInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bookInfo h3 {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  color: #5C3A21;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.tastingNotes {
+  font-size: 1rem;
+  color: #3E2723;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  font-style: italic;
+  border-left: 3px solid #8B5A2B;
+  padding-left: 0.85rem;
+}
+
+/* ========================================
+   CHOICES
+   ======================================== */
+.choicesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  flex-shrink: 0;
+  max-width: 92%;
+  align-self: flex-start;
+}
+
+.narrativeChoice {
+  background: rgba(30, 22, 18, 0.92);
+  border: 2px solid rgba(184, 151, 114, 0.45);
+  border-left: 5px solid #8B5A2B;
+  color: #FDFBF7;
+  padding: 1.1rem 1.6rem;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: left;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  opacity: 0;
+  transform: translateX(20px);
+  animation: choiceSlideIn 0.4s ease forwards;
+}
+
+.narrativeChoice:nth-child(1) { animation-delay: 0.05s; }
+.narrativeChoice:nth-child(2) { animation-delay: 0.15s; }
+.narrativeChoice:nth-child(3) { animation-delay: 0.25s; }
+.narrativeChoice:nth-child(4) { animation-delay: 0.35s; }
+.narrativeChoice:nth-child(5) { animation-delay: 0.45s; }
+.narrativeChoice:nth-child(6) { animation-delay: 0.55s; }
+
+@keyframes choiceSlideIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.narrativeChoice:hover {
+  background: #8B5A2B;
+  border-color: #FFFDF7;
+  border-left-color: #FFFDF7;
+  color: #fff;
+  transform: translateX(-8px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+}
+
+/* ========================================
+   FULL-WIDTH MODE (swipe / spin)
+   Hides the speech bubble and lets the
+   interactive component use the full area.
+   ======================================== */
+.fullWidthMode {
+  justify-content: flex-start;
+  align-items: center;
+  padding: 3.2rem 1.5rem 1rem 1.5rem;
+  gap: 0.6rem;
+}
+
+.fullWidthMode .dialogueBox {
+  max-width: 95%;
+  padding: 0.8rem 1.5rem;
+  border-radius: 18px;
+  margin-top: 1.4rem;
+}
+
+.fullWidthMode .dialogueText {
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.interactiveArea {
+  width: 100%;
+  max-width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 900px) {
+  .characterContainer {
+    width: 30vw;
+  }
+  .dialogueWrapper {
+    padding-right: 1.5rem;
+  }
+  .dialogueBox, .recommendationCard, .choicesContainer {
+    max-width: 100%;
+  }
+  .dialogueBox {
+    padding: 1.8rem 1.5rem 1.4rem;
+  }
+  .dialogueText {
+    font-size: 1.1rem;
+  }
+  .narrativeChoice {
+    font-size: 0.95rem;
+    padding: 0.85rem 1.2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .characterContainer {
+    width: 25vw;
+    opacity: 0.4;
+  }
+  .dialogueWrapper {
+    padding: 1rem;
+  }
+  .fullWidthMode {
+    padding: 0.5rem;
+  }
+  .dialogueBox::before, .dialogueBox::after {
+    display: none;
+  }
+}
