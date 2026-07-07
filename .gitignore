@@ -67,4 +67,6 @@ venv/
 npmrc
 yarn.lock
 *.zip
-ezgif*
+# Ignore only the huge source PNG split (712MB), NOT the public/frames_webp/ezgif-frame-*.webp
+# frames the sign-in animation needs.
+/ezgif-12095ca89f01a818-png-split/

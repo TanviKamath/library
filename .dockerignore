@@ -23,7 +23,7 @@ backend/backups/
 
 # Large local assets not needed in the image
 *.zip
-ezgif*
+ezgif-12095ca89f01a818-png-split/
 downloaded_covers/
 downloaded_ebooks/
 
