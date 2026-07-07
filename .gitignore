@@ -48,6 +48,11 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.flaskenv
+
+# Local databases & backups (production uses managed Postgres)
+*.db
+backups/
 
 # Python cache files
 __pycache__/
