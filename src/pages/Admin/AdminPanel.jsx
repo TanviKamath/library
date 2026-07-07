@@ -580,6 +580,9 @@ function BookFormModal({ book, categories, onSave, onClose }) {
   const [description, setDescription] = useState(book?.description || '');
   const [totalCopies, setTotalCopies] = useState(book?.total_copies || 1);
   const [coverUrl, setCoverUrl] = useState(book?.cover_image_url || '');
+  const [quoteText, setQuoteText] = useState(book?.quote_text || '');
+  const [quoteSource, setQuoteSource] = useState(book?.quote_source || '');
+  const [quoteVerified, setQuoteVerified] = useState(book?.quote_verified || false);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -588,6 +591,9 @@ function BookFormModal({ book, categories, onSave, onClose }) {
       category_id: Number(categoryId), description,
       total_copies: Number(totalCopies),
       cover_image_url: coverUrl || null,
+      quote_text: quoteText.trim() || null,
+      quote_source: quoteSource.trim() || null,
+      quote_verified: quoteVerified,
     });
   }
 
@@ -626,6 +632,21 @@ function BookFormModal({ book, categories, onSave, onClose }) {
           <div className="form-group">
             <label htmlFor="book-desc" className="form-label">Description</label>
             <textarea id="book-desc" className="input" rows={3} value={description} onChange={e => setDescription(e.target.value)} style={{ resize: 'vertical' }} />
+          </div>
+          <div className="form-group">
+            <label htmlFor="book-quote" className="form-label">Spotlight Quote <span style={{ fontWeight: 400, opacity: 0.7 }}>(shown on the dashboard when this book is spotlighted)</span></label>
+            <textarea id="book-quote" className="input" rows={2} maxLength={240} value={quoteText} onChange={e => setQuoteText(e.target.value)} placeholder="A short 1–2 sentence pull-quote from the book…" style={{ resize: 'vertical' }} />
+            <small style={{ opacity: 0.6 }}>{quoteText.length}/240</small>
+          </div>
+          <div className="form-group">
+            <label htmlFor="book-quote-source" className="form-label">Quote Source <span style={{ fontWeight: 400, opacity: 0.7 }}>(optional, e.g. "Ch. 3")</span></label>
+            <input id="book-quote-source" className="input" maxLength={80} value={quoteSource} onChange={e => setQuoteSource(e.target.value)} placeholder="Ch. 3" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="book-quote-verified" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input id="book-quote-verified" type="checkbox" checked={quoteVerified} onChange={e => setQuoteVerified(e.target.checked)} />
+              <span>Quote verified — accurate and correctly attributed</span>
+            </label>
           </div>
           <div className={styles['modal-actions']}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>

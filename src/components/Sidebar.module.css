@@ -10,7 +10,8 @@
   flex-direction: column;
   z-index: var(--z-sticky);
   overflow-x: hidden;
-  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+  will-change: width, transform, box-shadow;
 }
 
 .sidebar.hoverExpanded {
@@ -25,6 +26,8 @@
   min-height: 72px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .sidebar-nav {
@@ -221,8 +224,36 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0 4px;
+}
+
+.collapse-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-charcoal-light);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.collapse-toggle-btn:hover {
+  background: var(--color-terracotta-bg);
+  color: var(--color-terracotta);
+  border-color: var(--color-divider);
+}
+
+.collapse-toggle-btn svg,
+.collapse-toggle-btn .sidebar-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .brand-icon {
@@ -272,12 +303,13 @@
 .link-text,
 .sidebar-section-label,
 .sidebar-user-info,
-.brand-text {
+.brand-text,
+.collapse-toggle-btn {
   white-space: nowrap;
   overflow: hidden;
   opacity: 1;
   transform: translateX(0);
-  transition: opacity 0.25s ease 0.05s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+  transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1) 0.08s, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
 }
 
 /* ── Collapsed State (When NOT hover expanded) ── */
@@ -290,9 +322,19 @@
 .sidebar.collapsed:not(.hoverExpanded) .sidebar-user-info,
 .sidebar.collapsed:not(.hoverExpanded) .brand-text {
   opacity: 0;
-  transform: translateX(-10px);
+  transform: translateX(-8px);
   pointer-events: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.12s ease 0s, transform 0.12s ease 0s;
+}
+
+.sidebar.collapsed:not(.hoverExpanded) .collapse-toggle-btn {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: opacity 0.12s ease 0s, width 0.2s cubic-bezier(0.22, 1, 0.36, 1) 0s, margin 0.2s cubic-bezier(0.22, 1, 0.36, 1) 0s;
 }
 
 .sidebar.collapsed:not(.hoverExpanded) .sidebar-section-label {

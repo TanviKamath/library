@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.8rem;
+  gap: min(0.5rem, 1vh);
   width: 100%;
   max-width: 380px;
   margin: 0 auto;
@@ -46,8 +46,8 @@
 /* ── Card stack ── */
 .cardStack {
   position: relative;
-  width: 280px;
-  height: 360px;
+  width: min(300px, 42vw);
+  height: min(380px, 48vh);
 }
 
 .card {
@@ -159,6 +159,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 20px 20px 0 0;
 }
 
 .coverImage {
@@ -185,7 +186,7 @@
 
 /* ── Card info ── */
 .cardInfo {
-  padding: 0.8rem 1.1rem;
+  padding: 0.6rem 1rem;
   background: #FFFDF7;
   border-top: 2px solid #F4EBE1;
   flex-shrink: 0;
@@ -194,10 +195,10 @@
 .cardTitle {
   margin: 0;
   font-family: var(--font-serif, Georgia, serif);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #2C1810;
-  line-height: 1.3;
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -205,16 +206,16 @@
 }
 
 .cardAuthor {
-  margin: 0.2rem 0 0;
-  font-size: 0.85rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
   color: #8B5A2B;
   font-style: italic;
 }
 
 .genreBadge {
   display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.2rem 0.7rem;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.6rem;
   background: rgba(139, 90, 43, 0.1);
   border: 1px solid rgba(139, 90, 43, 0.25);
   border-radius: 20px;
@@ -230,14 +231,13 @@
   display: flex;
   gap: 2.2rem;
   align-items: center;
-  margin-top: -0.2rem;
+  margin-top: 0.8rem;
 }
 
 .actionBtn {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  border: 2px solid;
   display: flex;
   align-items: center;
   justify-content: center;

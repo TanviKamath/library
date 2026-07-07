@@ -13,10 +13,18 @@ import { getProxiedImageUrl } from '../../utils/image';
    Pauses organically at punctuation (periods, commas, question marks)
    to simulate realistic vocal pacing and human speech rhythm.
    ======================================== */
-function TypewriterText({ text, baseSpeed = 26, onComplete }) {
+function TypewriterText({ text, baseSpeed = 26, onComplete, forceComplete }) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
+
+  useEffect(() => {
+    if (forceComplete && !done) {
+      setDisplayed(text);
+      setDone(true);
+      onComplete?.();
+    }
+  }, [forceComplete, done, text, onComplete]);
 
   useEffect(() => {
     setDisplayed('');
@@ -342,7 +350,7 @@ export default function BaristaCompanion() {
               "I need Deep Focus."
             </button>
             <button className={styles.narrativeChoice} onClick={() => fetchRecommendation(null)}>
-              "Just surprise me with your best pour."
+              "Just surprise me with your best pour." <span className={styles.sparkleIcon}>✦</span>
             </button>
           </>
         );
@@ -467,15 +475,21 @@ export default function BaristaCompanion() {
           <img src="/barista_sprite.png" alt="Mr. Finn" className={styles.characterSprite} />
         </div>
 
-        {/* Dialogue area — right side */}
+
+        {/* Dialogue area — right side wooden menu board */}
         <div className={`${styles.dialogueWrapper} ${isInteractiveMode ? styles.fullWidthMode : ''}`}>
+
           {/* Speech bubble box aligned near Finn's mouth */}
-          <div className={styles.dialogueBox}>
-            <div className={styles.speakerName}>Mr. Finn</div>
+          <div className={styles.dialogueBox} onClick={() => setIsTyping(false)}>
+            <div className={styles.speakerName}>
+              <span>MR. FINN</span>
+              <span className={styles.quillIcon}>✒️</span>
+            </div>
             <div className={styles.dialogueText}>
               {isOpen && currentText && (
                 <TypewriterText
                   text={currentText}
+                  forceComplete={!isTyping}
                   onComplete={() => setIsTyping(false)}
                 />
               )}
@@ -483,9 +497,10 @@ export default function BaristaCompanion() {
           </div>
 
           {/* Choices — conversational replies or interactive components */}
-          <div className={styles.choicesContainer}>
+          <div className={`${styles.choicesContainer} ${currentNode === NODE.SHOW_RECOMMENDATION ? styles.choicesCentered : styles.choicesEven}`}>
             {renderChoices()}
           </div>
+
         </div>
       </div>
     </>

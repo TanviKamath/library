@@ -60,11 +60,16 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: radial-gradient(
-    ellipse 80% 80% at 50% 50%,
-    rgba(25, 18, 14, 0.78) 0%,
-    rgba(12, 8, 5, 0.96) 100%
-  );
+  background: 
+    radial-gradient(
+      ellipse 80% 80% at 50% 50%,
+      rgba(25, 18, 14, 0.15) 0%,
+      rgba(12, 8, 5, 0.55) 100%
+    ),
+    url('/barista_bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 
@@ -166,100 +171,154 @@
 }
 
 /* ========================================
-   DIALOGUE AREA — right column
+   DIALOGUE AREA — right column wooden board
    ======================================== */
 .dialogueWrapper {
-  flex: 1;
-  min-width: 0;
-  height: 100vh;
-  max-height: 100vh;
-  padding: 4.2rem 4rem 2.5rem 1.5rem;
+  width: 46vw;
+  max-width: 620px;
+  height: 92vh;
+  max-height: 92vh;
+  align-self: center;
+  margin: 0 1.5vw 0 auto;
+  padding: 2.4rem 2.5rem 2rem 2.5rem;
   box-sizing: border-box;
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Align from top safely below close button */
-  gap: 1.2rem;
+  justify-content: flex-start;
+  gap: 0.9rem;
   z-index: 10001;
-  overflow-y: auto;
+  overflow: hidden;
+
+  /* Rich Dark Wood Board Texture & Frame */
+  background: 
+    radial-gradient(ellipse at top, rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0.45) 100%),
+    linear-gradient(180deg, #593016 0%, #3a1e0c 50%, #211005 100%);
+  border: 4px solid #8c7e71;
+  border-radius: 28px;
+  box-shadow: 
+    0 25px 65px rgba(0, 0, 0, 0.9),
+    0 0 0 3px #261105,
+    0 0 0 7px #6e6258,
+    0 0 0 9px #1a0b03,
+    inset 0 0 45px rgba(0, 0, 0, 0.85),
+    inset 0 2px 4px rgba(255, 255, 255, 0.15);
+  position: relative;
 }
 
+
 /* ========================================
-   SPEECH BUBBLE BOX (Pop-in animation)
+   SPEECH BUBBLE BOX (Parchment Scroll)
    ======================================== */
 @keyframes bubblePop {
-  0% { opacity: 0; transform: scale(0.92) translateX(-15px); }
-  100% { opacity: 1; transform: scale(1) translateX(0); }
+  0% { opacity: 0; transform: scale(0.94) translateY(-10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .dialogueBox {
-  /* Warm creamy speech bubble */
-  background: #FFFDF7;
-  border: 3.5px solid #8B5A2B;
-  border-radius: 30px;
-  padding: 2.3rem 3rem 2.1rem;
-  margin-top: 1.8rem;
+  /* Warm parchment scroll texture */
+  background: linear-gradient(180deg, #FFFDF7 0%, #F5EDE0 100%);
+  border: 3px solid #734320;
+  border-radius: 24px;
+  padding: 1.5rem 2rem 1.1rem;
+  margin-top: 0.5rem;
   position: relative;
   box-shadow: 
-    0 18px 45px rgba(0,0,0,0.5),
-    inset 0 0 25px rgba(139, 90, 43, 0.08);
-  color: #2C1810;
-  flex-shrink: 0;
-  max-width: 92%;
-  align-self: flex-start; /* Sit snugly on the left side facing Finn */
+    0 16px 40px rgba(0, 0, 0, 0.65),
+    inset 0 0 30px rgba(139, 90, 43, 0.12),
+    inset 0 0 0 2px #FFFDF7;
+  color: #3E220F;
+  width: 100%;
+  box-sizing: border-box;
   animation: bubblePop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  cursor: pointer;
 }
 
-/* SPEECH BUBBLE TAIL (Border layer pointing down-left at Finn's face) */
+/* SPEECH BUBBLE TAIL (Border layer pointing left at Finn's chest/face) */
 .dialogueBox::before {
   content: '';
   position: absolute;
-  left: -28px;
-  top: 55px; /* Aligned perfectly with his mouth/cheek */
-  width: 0;
-  height: 0;
-  border-top: 18px solid transparent;
-  border-right: 28px solid #8B5A2B;
-  border-bottom: 18px solid transparent;
-}
-
-/* SPEECH BUBBLE TAIL (Inner cream layer pointing down-left at Finn's face) */
-.dialogueBox::after {
-  content: '';
-  position: absolute;
-  left: -22px;
-  top: 57px;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 0;
   height: 0;
   border-top: 16px solid transparent;
-  border-right: 24px solid #FFFDF7;
+  border-right: 24px solid #734320;
   border-bottom: 16px solid transparent;
 }
 
+/* SPEECH BUBBLE TAIL (Inner parchment layer pointing left at Finn's chest/face) */
+.dialogueBox::after {
+  content: '';
+  position: absolute;
+  left: -19px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 14px solid transparent;
+  border-right: 21px solid #FFFDF7;
+  border-bottom: 14px solid transparent;
+}
+
+/* ========================================
+   SPEAKER NAME BADGE (Carved Wooden Plaque)
+   ======================================== */
 .speakerName {
   position: absolute;
-  top: -16px;
-  left: 32px;
-  background: #8B5A2B;
-  border: 2px solid #FFFDF7;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #7a4621 0%, #4a2610 100%);
+  border: 2px solid #c4a482;
   color: #FFFDF7;
-  padding: 5px 22px;
+  padding: 6px 36px;
   border-radius: 20px;
   font-family: var(--font-serif, Georgia, serif);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 1.5px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  letter-spacing: 2px;
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.65),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
   text-transform: uppercase;
-  z-index: 10;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Metal Rivets on ends of speaker plaque */
+.speakerName::before,
+.speakerName::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ded6cc;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.8), 0 1px 1px rgba(255,255,255,0.4);
+}
+.speakerName::before { left: 14px; }
+.speakerName::after { right: 14px; }
+
+.quillIcon {
+  font-size: 0.95rem;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
 
 .dialogueText {
-  font-size: 1.35rem;
-  line-height: 1.68;
-  font-family: var(--font-sans, system-ui, sans-serif);
-  color: #2C1810;
-  font-weight: 500;
+  font-size: 1.2rem;
+  line-height: 1.55;
+  font-family: var(--font-serif, Georgia, serif);
+  color: #3E220F;
+  font-weight: 600;
+  text-align: center;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -270,7 +329,7 @@
   display: inline-block;
   width: 3px;
   height: 1.1em;
-  background: #8B5A2B;
+  background: #734320;
   margin-left: 3px;
   vertical-align: text-bottom;
   animation: blink 0.8s step-end infinite;
@@ -286,43 +345,46 @@
    ======================================== */
 .recommendationCard {
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 1.3rem;
   background: #F4EBE1;
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: 16px;
   border: 2px solid #D8C3A5;
   box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-  flex-shrink: 0;
-  max-width: 92%;
-  align-self: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
 }
 
 .bookCover {
-  width: 95px;
-  height: 145px;
+  width: auto;
+  height: min(285px, 30vh);
+  aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.28);
   border: 1px solid rgba(0,0,0,0.1);
   flex-shrink: 0;
   background: #E8D8C8;
 }
 
 .bookCoverPlaceholder {
-  width: 95px;
-  height: 145px;
-  border-radius: 8px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  width: auto;
+  height: min(285px, 30vh);
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.28);
   border: 1px solid rgba(0,0,0,0.1);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0.5rem;
+  padding: 0.75rem;
   color: white;
   font-family: var(--font-serif, Georgia, serif);
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
@@ -354,33 +416,59 @@
 }
 
 /* ========================================
-   CHOICES
+   CHOICES CONTAINER & BUTTONS
    ======================================== */
 .choicesContainer {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  flex-shrink: 0;
-  max-width: 92%;
-  align-self: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+  align-items: center;
+  /* Fill the constant-height panel below the speech bubble. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 2px;
+}
+
+/* Choice-list states (greeting, onboarding, etc.) — spread the options
+   evenly down the panel so the spacing looks balanced. */
+.choicesEven {
+  justify-content: space-evenly;
+}
+
+/* Card states (recommendation) — keep the card + buttons together, centered,
+   and fall back to top-aligned if they'd overflow a short screen. */
+.choicesCentered {
+  justify-content: safe center;
+  gap: 0.75rem;
 }
 
 .narrativeChoice {
-  background: rgba(30, 22, 18, 0.92);
-  border: 2px solid rgba(184, 151, 114, 0.45);
-  border-left: 5px solid #8B5A2B;
+  width: 100%;
+  background: linear-gradient(180deg, #4d2814 0%, #2e1507 100%);
+  border: 2px solid #8c5d38;
   color: #FDFBF7;
-  padding: 1.1rem 1.6rem;
-  border-radius: 14px;
-  font-size: 1.05rem;
-  font-weight: 500;
+  padding: 0.85rem 1.4rem;
+  border-radius: 50px;
+  font-size: 1.02rem;
+  font-weight: 600;
+  font-family: var(--font-serif, Georgia, serif);
   cursor: pointer;
-  transition: all 0.25s ease;
-  text-align: left;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: center;
+  box-shadow: 
+    0 6px 18px rgba(0, 0, 0, 0.45),
+    inset 0 2px 3px rgba(255, 255, 255, 0.12),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
   opacity: 0;
-  transform: translateX(20px);
+  transform: translateY(15px);
   animation: choiceSlideIn 0.4s ease forwards;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .narrativeChoice:nth-child(1) { animation-delay: 0.05s; }
@@ -393,41 +481,58 @@
 @keyframes choiceSlideIn {
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 }
 
 .narrativeChoice:hover {
-  background: #8B5A2B;
-  border-color: #FFFDF7;
-  border-left-color: #FFFDF7;
-  color: #fff;
-  transform: translateX(-8px) scale(1.01);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  background: linear-gradient(180deg, #6e3a1d 0%, #42200e 100%);
+  border-color: #FFD700;
+  color: #FFFFFF;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 0 25px rgba(255, 215, 0, 0.5),
+    0 10px 25px rgba(0, 0, 0, 0.6),
+    inset 0 0 15px rgba(255, 215, 0, 0.25);
 }
+
+.sparkleIcon {
+  color: #FFD700;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+  animation: sparkleSpin 3s infinite linear;
+}
+
+@keyframes sparkleSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+
 
 /* ========================================
    FULL-WIDTH MODE (swipe / spin)
-   Hides the speech bubble and lets the
-   interactive component use the full area.
    ======================================== */
 .fullWidthMode {
+  height: 92vh;
   justify-content: flex-start;
   align-items: center;
-  padding: 3.2rem 1.5rem 1rem 1.5rem;
-  gap: 0.6rem;
+  padding: 1.8rem 1.5rem 1rem 1.5rem;
+  gap: 0.3rem;
 }
 
 .fullWidthMode .dialogueBox {
   max-width: 95%;
-  padding: 0.8rem 1.5rem;
+  padding: 1.4rem 1.4rem 0.6rem;
   border-radius: 18px;
-  margin-top: 1.4rem;
+  margin-top: 0.8rem;
+  flex-shrink: 0;
 }
 
 .fullWidthMode .dialogueText {
-  font-size: 1.05rem;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
 .interactiveArea {
@@ -449,20 +554,19 @@
     width: 30vw;
   }
   .dialogueWrapper {
-    padding-right: 1.5rem;
-  }
-  .dialogueBox, .recommendationCard, .choicesContainer {
-    max-width: 100%;
+    width: 60vw;
+    margin: 3vh 2vw 3vh auto;
+    padding: 3.5rem 1.8rem 1.5rem 1.8rem;
   }
   .dialogueBox {
-    padding: 1.8rem 1.5rem 1.4rem;
+    padding: 2rem 1.5rem 1.5rem;
   }
   .dialogueText {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
   .narrativeChoice {
-    font-size: 0.95rem;
-    padding: 0.85rem 1.2rem;
+    font-size: 1rem;
+    padding: 1rem 1.4rem;
   }
 }
 
@@ -472,12 +576,30 @@
     opacity: 0.4;
   }
   .dialogueWrapper {
-    padding: 1rem;
+    width: 92vw;
+    margin: 2vh 4vw;
+    padding: 3rem 1.2rem 1.2rem 1.2rem;
   }
   .fullWidthMode {
-    padding: 0.5rem;
+    padding: 2.5rem 1rem 1rem 1rem;
   }
   .dialogueBox::before, .dialogueBox::after {
     display: none;
+  }
+  .roomBranding {
+    display: none;
+  }
+  /* Stack the recommendation cover above the text on narrow panels */
+  .recommendationCard {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .bookCover, .bookCoverPlaceholder {
+    width: 160px;
+    height: 240px;
+  }
+  .tastingNotes {
+    text-align: left;
   }
 }

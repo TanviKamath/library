@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from './Sidebar.module.css';
@@ -77,12 +77,26 @@ function getInitials(name) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-export function Sidebar({ collapsed, toggleCollapse }) {
+export function Sidebar({ collapsed, toggleCollapse, isHovered, setIsHovered }) {
   const { user, logout, isStaff, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimerRef = useRef(null);
   const isVisuallyCollapsed = collapsed && !isHovered;
+
+  const handleMouseEnter = () => {
+    if (!collapsed || !setIsHovered) return;
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => {
+      setIsHovered(true);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (!setIsHovered) return;
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    setIsHovered(false);
+  };
 
   async function handleLogout() {
     await logout();
@@ -120,12 +134,12 @@ export function Sidebar({ collapsed, toggleCollapse }) {
 
       <aside
         className={`${styles.sidebar} ${open ? styles.open : ''} ${isVisuallyCollapsed ? styles.collapsed : ''} ${collapsed && isHovered ? styles.hoverExpanded : ''}`}
-        onMouseEnter={() => collapsed && setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Brand */}
         <div className={styles['sidebar-brand']}>
-          <div className={styles['brand-container']}>
+          <div className={styles['brand-container']} onClick={() => navigate('/app/dashboard')} style={{ cursor: 'pointer' }}>
             <div className={styles['brand-icon']} title="Brew & Borrow">
               <img src="/coffee-cup.png" alt="Brew & Borrow Cafe Library" className={styles['brand-logo']} />
             </div>

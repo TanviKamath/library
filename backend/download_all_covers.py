@@ -53,8 +53,16 @@ def download_url(url: str, timeout: int = 10) -> bytes | None:
     return None
 
 
-def openlibrary_search(title: str, author: str = '') -> str | None:
-    """Search OpenLibrary for a cover ID by title (+ optional author)."""
+def openlibrary_search(title: str, author: str = '', isbn: str = '') -> str | None:
+    """Search OpenLibrary for a cover ID by title (+ optional author) or ISBN."""
+    if isbn:
+        try:
+            resp = requests.get(f"https://openlibrary.org/isbn/{isbn}.json", headers=HEADERS, timeout=10)
+            covers = resp.json().get('covers', [])
+            if covers:
+                return f"https://covers.openlibrary.org/b/id/{covers[0]}-L.jpg"
+        except Exception:
+            pass
     query = urllib.parse.quote(f"{title} {author}".strip())
     try:
         resp = requests.get(
@@ -72,28 +80,34 @@ def openlibrary_search(title: str, author: str = '') -> str | None:
     return None
 
 
-def google_books_cover(title: str, author: str = '') -> str | None:
+def google_books_cover(title: str, author: str = '', isbn: str = '') -> str | None:
     """Search Google Books for a cover thumbnail URL."""
-    query = urllib.parse.quote(f"{title} {author}".strip())
-    try:
-        resp = requests.get(
-            f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults=1",
-            headers=HEADERS,
-            timeout=12
-        )
-        items = resp.json().get('items', [])
-        if items:
-            img = items[0].get('volumeInfo', {}).get('imageLinks', {})
-            # Prefer largest available
-            for key in ['extraLarge', 'large', 'medium', 'thumbnail']:
-                url = img.get(key)
-                if url:
-                    # Force HTTPS and request larger size
-                    url = url.replace('http://', 'https://')
-                    url = url.replace('&zoom=1', '&zoom=0')
-                    return url
-    except Exception:
-        pass
+    queries = []
+    if isbn:
+        queries.append(f"isbn:{isbn}")
+    queries.append(f"{title} {author}".strip())
+    
+    for q in queries:
+        query = urllib.parse.quote(q)
+        try:
+            resp = requests.get(
+                f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults=1",
+                headers=HEADERS,
+                timeout=12
+            )
+            items = resp.json().get('items', [])
+            if items:
+                img = items[0].get('volumeInfo', {}).get('imageLinks', {})
+                # Prefer largest available
+                for key in ['extraLarge', 'large', 'medium', 'thumbnail']:
+                    url = img.get(key)
+                    if url:
+                        # Force HTTPS and request larger size
+                        url = url.replace('http://', 'https://')
+                        url = url.replace('&zoom=1', '&zoom=0')
+                        return url
+        except Exception:
+            pass
     return None
 
 
@@ -129,7 +143,9 @@ def process_book(book: Book) -> bool:
                 return True
 
     # --- Strategy 2: Google Books (more reliable, no auth needed) ---
-    gb_url = google_books_cover(book.title, getattr(book, 'author_name', ''))
+    author_name = book.author.name if book.author else ''
+    isbn = getattr(book, 'isbn', '') or ''
+    gb_url = google_books_cover(book.title, author_name, isbn)
     if gb_url:
         content = download_url(gb_url)
         if content:
@@ -140,7 +156,7 @@ def process_book(book: Book) -> bool:
             return True
 
     # --- Strategy 3: OpenLibrary search fallback ---
-    ol_url = openlibrary_search(book.title, getattr(book, 'author_name', ''))
+    ol_url = openlibrary_search(book.title, author_name, isbn)
     if ol_url:
         content = download_url(ol_url)
         if content:
@@ -166,14 +182,15 @@ def main():
         failed = []
 
         for i, book in enumerate(books, 1):
-            prefix = f"[{i:>3}/{total}] {book.title[:50]:<50}"
+            title_safe = book.title.encode('ascii', 'replace').decode('ascii')
+            prefix = f"[{i:>3}/{total}] {title_safe[:50]:<50}"
             success = process_book(book)
             if success:
                 ok += 1
-                print(f"{prefix} ✓")
+                print(f"{prefix} [OK]")
             else:
-                failed.append(f"  ID {book.id}: {book.title}")
-                print(f"{prefix} ✗  (no cover found)")
+                failed.append(f"  ID {book.id}: {title_safe}")
+                print(f"{prefix} [FAIL]  (no cover found)")
 
             # Polite delay to avoid rate-limiting
             time.sleep(0.15)

@@ -27,12 +27,12 @@
 
 .detail-top {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: minmax(220px, 280px) 1fr;
   gap: var(--space-8);
   margin-bottom: var(--space-10);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
   .detail-top {
     grid-template-columns: 1fr;
     gap: var(--space-6);

@@ -439,6 +439,14 @@ function SpotlightSection({ actionLabel }) {
               ? (specialBook.description.length > 180 ? specialBook.description.slice(0, 180) + '...' : specialBook.description)
               : 'Explore this fascinating new addition to our collection.'}
           </p>
+          {specialBook.quote_text && (
+            <blockquote className={styles['spotlight-quote']}>
+              <p className={styles['spotlight-quote-text']}>“{specialBook.quote_text}”</p>
+              <cite className={styles['spotlight-quote-cite']}>
+                — from this book{specialBook.quote_source ? ` · ${specialBook.quote_source}` : ''}
+              </cite>
+            </blockquote>
+          )}
           <div className={styles['spotlight-actions']}>
             <button className={styles['spotlight-btn']} onClick={() => navigate(`/app/browse/${specialBook.id}`)}>
               {actionLabel}

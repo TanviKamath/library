@@ -13,6 +13,33 @@ export default function MysteryDraw() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkoutStatus, setCheckoutStatus] = useState(null);
+  // interaction_id of the current tarot pull (null once resolved). Lets the
+  // draw feed the SAME affinity engine as recommendations/swipes.
+  const [pullId, setPullId] = useState(null);
+
+  /**
+   * Resolve the current tarot pull through the shared barista endpoint so it
+   * updates the user's learned taste. Reserving is a positive signal;
+   * dismissing/reshuffling a revealed card is a *soft* dislike. Fire-and-forget.
+   */
+  const resolvePull = (liked) => {
+    setPullId((currentId) => {
+      if (currentId) {
+        api.post('/barista/respond', {
+          interaction_id: currentId,
+          response: liked ? 'accepted' : 'declined',
+          reaction: liked ? 'liked' : 'not_for_me',
+        }).catch((e) => console.error('Tarot pull resolve failed:', e));
+      }
+      return null;
+    });
+  };
+
+  // Dismiss a revealed card without reserving it → soft dislike.
+  const dismissCard = () => {
+    resolvePull(false);
+    setSelectedBook(null);
+  };
 
   const loadBookPool = async () => {
     try {
@@ -88,6 +115,14 @@ export default function MysteryDraw() {
     setSelectedBook(book);
     setIsFlipped(false);
     setCheckoutStatus(null);
+    // Log the reveal as a tarot pull so we can attribute the user's next
+    // action (reserve vs. reshuffle) to this specific book.
+    setPullId(null);
+    if (book?.id) {
+      api.post('/barista/tarot-pull', { book_id: book.id })
+        .then((res) => setPullId(res?.interaction_id ?? null))
+        .catch((e) => console.error('Tarot pull log failed:', e));
+    }
     // Trigger 3D flip after modal transition
     setTimeout(() => {
       setIsFlipped(true);
@@ -100,6 +135,8 @@ export default function MysteryDraw() {
     try {
       await api.post('/reservations/join', { book_id: selectedBook.id });
       setCheckoutStatus('success');
+      // Reserving the drawn book is a strong positive taste signal.
+      resolvePull(true);
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Failed to reserve book.';
       setCheckoutStatus({ error: msg });
@@ -153,9 +190,9 @@ export default function MysteryDraw() {
       )}
 
       {selectedBook && (
-        <div className={styles.overlay} onClick={() => setSelectedBook(null)}>
+        <div className={styles.overlay} onClick={dismissCard}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.closeBtn} onClick={() => setSelectedBook(null)}>×</button>
+            <button className={styles.closeBtn} onClick={dismissCard}>×</button>
             
             <div className={styles.modalContent}>
               {/* 3D Card Flip Container */}
@@ -220,9 +257,9 @@ export default function MysteryDraw() {
                       {checkoutStatus === 'loading' ? 'Reserving...' : 'Reserve this Book'}
                     </button>
                     <button 
-                      className={`${styles.actionBtn} ${styles.secondaryBtn}`} 
+                      className={`${styles.actionBtn} ${styles.secondaryBtn}`}
                       onClick={() => {
-                        setSelectedBook(null);
+                        dismissCard();
                         loadMysteryDeck();
                       }}
                     >

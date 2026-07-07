@@ -131,7 +131,10 @@ def create_book():
         total_copies=data.get('total_copies', 1), # pyrefly: ignore
         available_copies=data.get('total_copies', 1), # pyrefly: ignore
         gutenberg_id=data.get('gutenberg_id'),
-        cover_image_url=data.get('cover_image_url')
+        cover_image_url=data.get('cover_image_url'),
+        quote_text=data.get('quote_text'), # pyrefly: ignore
+        quote_source=data.get('quote_source'), # pyrefly: ignore
+        quote_verified=data.get('quote_verified', False) # pyrefly: ignore
     )
     db.session.add(new_book)
 
@@ -259,6 +262,12 @@ def update_book(id):
         book.gutenberg_id = data['gutenberg_id']
     if 'cover_image_url' in data:
         book.cover_image_url = data['cover_image_url']
+    if 'quote_text' in data:
+        book.quote_text = data['quote_text']
+    if 'quote_source' in data:
+        book.quote_source = data['quote_source']
+    if 'quote_verified' in data:
+        book.quote_verified = data['quote_verified']
 
     # Handle author name change
     if 'author_name' in data:

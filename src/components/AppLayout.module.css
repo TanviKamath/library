@@ -9,7 +9,8 @@
   margin-left: var(--sidebar-width);
   padding: var(--space-8);
   min-height: 100vh;
-  transition: margin-left var(--duration-slow) var(--ease-out);
+  transition: margin-left 0.3s cubic-bezier(0.22, 1, 0.36, 1), padding 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: margin-left;
 }
 
 .app-main.collapsed {

@@ -6,8 +6,9 @@ import styles from './AppLayout.module.css';
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
-    return saved !== null ? saved === 'true' : true;
+    return saved !== null ? saved === 'true' : false;
   });
+  const [isHovered, setIsHovered] = useState(false);
 
   const toggleCollapse = () => {
     setCollapsed(prev => {
@@ -17,10 +18,17 @@ export function AppLayout() {
     });
   };
 
+  const isExpanded = !collapsed || isHovered;
+
   return (
     <div className={styles['app-layout']}>
-      <Sidebar collapsed={collapsed} toggleCollapse={toggleCollapse} />
-      <main className={`${styles['app-main']} ${collapsed ? styles.collapsed : ''}`}>
+      <Sidebar 
+        collapsed={collapsed} 
+        toggleCollapse={toggleCollapse} 
+        isHovered={isHovered}
+        setIsHovered={setIsHovered}
+      />
+      <main className={`${styles['app-main']} ${!isExpanded ? styles.collapsed : ''}`}>
         <Outlet />
       </main>
     </div>

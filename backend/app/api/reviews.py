@@ -46,6 +46,16 @@ def add_review(book_id):
         book.rating = round(avg_rating, 1)
         db.session.commit()
 
+    # The user's rating is a taste signal — bump their preference version so the
+    # affinity engine recomputes with it (busts the cached affinity).
+    from app.models.barista import BaristaProfile
+    profile = BaristaProfile.query.filter_by(user_id=current_user_id).first()
+    if profile:
+        profile.preference_version = (profile.preference_version or 0) + 1
+        db.session.commit()
+        from app.services.preference_engine import invalidate_user_affinity
+        invalidate_user_affinity(current_user_id)
+
     return jsonify({'message': 'Review submitted successfully', 'book_rating': book.rating}), 200
 
 @bp.route('/reviews/my', methods=['GET'])

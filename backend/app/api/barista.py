@@ -54,8 +54,14 @@ def barista_onboard():
         profile.favorite_categories_cache = data.get('favorite_categories', [])
         profile.skill_level = data.get('skill_level')
         profile.reading_count = data.get('reading_count')
-        
+
+    # Bump preference_version so the affinity cache picks up the onboarding
+    # genre seed immediately (cold-start steering) instead of after the TTL.
+    profile.preference_version = (profile.preference_version or 0) + 1
+
     db.session.commit()
+    from app.services.preference_engine import invalidate_user_affinity
+    invalidate_user_affinity(user_id)
     return jsonify({'message': 'Onboarding complete', 'profile': profile.to_dict()}), 200
 
 @bp.route('/barista/recommend', methods=['POST'])
@@ -232,6 +238,46 @@ def barista_swipe_deck():
         'cards': cards,
         'voice_line': voice_line,
     }), 200
+
+
+@bp.route('/barista/tarot-pull', methods=['POST'])
+@jwt_required()
+def barista_tarot_pull():
+    """Log a tarot ("Blind Date with a Book") card reveal so the draw feeds
+    the SAME affinity engine as recommendations and swipes.
+
+    The frontend calls this the moment a face-down card is flipped, passing
+    the revealed ``book_id``. We create a pending interaction_type='tarot'
+    log and return its ``interaction_id``; the frontend then resolves it via
+    the shared ``/barista/respond`` endpoint:
+
+        * Reserve the drawn book  -> response='accepted',  reaction='liked'
+        * Reveal then reshuffle   -> response='declined',  reaction='not_for_me'
+
+    A reshuffle is treated as a *soft* dislike by the preference engine
+    (TAROT_DISLIKE_WEIGHT), so idle curiosity never nukes a whole genre.
+    """
+    user_id = get_jwt_identity()
+    get_or_create_profile(user_id)
+
+    data = request.get_json() or {}
+    book_id = data.get('book_id')
+    if not book_id:
+        return jsonify({'error': 'book_id is required'}), 400
+
+    book = Book.query.get(book_id)
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
+
+    log = BaristaInteractionLog(
+        user_id=user_id,
+        interaction_type='tarot',
+        book_recommended_id=book.id,
+    )
+    db.session.add(log)
+    db.session.commit()
+
+    return jsonify({'interaction_id': log.id}), 201
 
 
 @bp.route('/barista/spin', methods=['POST'])

@@ -120,8 +120,7 @@ export default function Home() {
                       </svg>
                     </Link>
                     <Link to="/gallery" className={styles['hero-btn-secondary']}>
-                      
-                      Enter 3D Library
+                      Enter the Sphere Library
                     </Link>
                   </>
                 ) : (
@@ -130,7 +129,7 @@ export default function Home() {
                       Sign In
                     </Link>
                     <Link to="/gallery" className={styles['hero-btn-secondary']}>
-                      Enter Library
+                      Enter the Sphere Library
                     </Link>
                   </>
                 )}

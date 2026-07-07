@@ -15,6 +15,9 @@ class BookSchema(Schema):
     rating = fields.Float(validate=validate.Range(min=0, max=5))
     gutenberg_id = fields.Integer(allow_none=True)
     cover_image_url = fields.String(allow_none=True)
+    quote_text = fields.String(allow_none=True, validate=validate.Length(max=240))
+    quote_source = fields.String(allow_none=True, validate=validate.Length(max=80))
+    quote_verified = fields.Boolean()
 
 class MemberSchema(Schema):
     username = fields.String(required=True, validate=validate.Length(min=2, max=64))

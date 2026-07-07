@@ -415,6 +415,34 @@
   margin-bottom: var(--space-4);
 }
 
+.spotlight-quote {
+  margin: 0 0 var(--space-4);
+  padding: 10px var(--space-3) 10px calc(var(--space-3) + 2px);
+  border-left: 4px solid #7b623b;
+  background: #f1ebd9;
+  border-radius: 0 8px 8px 0;
+}
+
+.spotlight-quote-text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: #2b1a0a;
+  line-height: 1.45;
+  margin: 0 0 6px;
+}
+
+.spotlight-quote-cite {
+  display: block;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7b623b;
+}
+
 .spotlight-actions {
   display: flex;
   flex-wrap: wrap;

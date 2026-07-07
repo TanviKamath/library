@@ -1,23 +1,30 @@
+"""Finn's book recommender.
+
+Scoring is a transparent weighted sum over the user's affinity (computed by
+``preference_engine.compute_user_affinity``) plus each book's own quality,
+recency and popularity signals. Every point a book earns traces back to a
+named weight times a concrete signal, so we can always explain *why* a book
+was chosen. No black-box ML.
+"""
+
 import random
-from typing import List, Tuple, Optional
+from typing import List, Tuple
+
 from app.models import Book, BaristaProfile, Transaction
-from app.models.barista import BaristaInteractionLog
 from sqlalchemy.orm import joinedload
 
-# Mapping from mood tags to category names
+from app.services import preference_engine as pe
+
+# Mapping from mood tags to category names — a light situational nudge.
 MOOD_MAP = {
     'cozy': ['Fiction', 'Romance'],
     'thrilling': ['Mystery', 'Sci-Fi'],
-    'focus': ['Non-Fiction', 'Biography']
+    'focus': ['Non-Fiction', 'Biography'],
 }
-
-# Weight clamping range to prevent runaway scores from learned preferences.
-WEIGHT_FLOOR = -5
-WEIGHT_CEIL  = 10
 
 
 def _get_candidates(profile: BaristaProfile) -> list:
-    """Return available books excluding past borrows and recently‑declined
+    """Return available books excluding past borrows and recently-declined
     books, eagerly loading category + author.  Used by recommend(),
     get_swipe_deck(), and get_spin_candidates().
     """
@@ -25,7 +32,7 @@ def _get_candidates(profile: BaristaProfile) -> list:
 
     query = Book.query.filter(Book.available_copies > 0)
 
-    # Exclude books already borrowed
+    # Exclude books already borrowed.
     past_tx_ids = [
         tx.book_id
         for tx in Transaction.query.filter_by(user_id=profile.user_id).all()
@@ -33,213 +40,226 @@ def _get_candidates(profile: BaristaProfile) -> list:
     if past_tx_ids:
         query = query.filter(~Book.id.in_(past_tx_ids))
 
-    # Exclude books declined in the last 30 days
+    # Exclude books declined/disliked in the last 30 days (swipe-left, tarot
+    # reshuffle and explicit declines all funnel through this).
     declined_ids = get_recently_declined_book_ids(profile.user_id)
     if declined_ids:
         query = query.filter(~Book.id.in_(declined_ids))
 
-    candidates = query.options(
+    return query.options(
         joinedload(Book.category),
         joinedload(Book.author),
     ).all()
-    return candidates
 
 
-def _score_book(book: Book, profile: BaristaProfile, mood_tag: str) -> Tuple[int, List[str]]:
-    """Return a numeric score and a list of human‑readable reasons."""
-    score = 0
-    reasons = []
+def _score_book(book: Book, affinity: dict,
+                mood_tag: str | None) -> Tuple[float, List[Tuple[str, float]]]:
+    """Score a candidate as a weighted sum over the affinity dict.
 
-    # 1. Preferred categories (favorite_categories_cache)
-    favs = profile.favorite_categories_cache or []
-    if favs and book.category and book.category.name in favs:
-        score += 5
-        reasons.append('matches your favorite genres')
+    Returns ``(score, contributions)`` where *contributions* is a list of
+    ``(reason_text, points)`` for the positive signals that drove the score —
+    used to build the "why this book" line.
+    """
+    score = 0.0
+    contributions: List[Tuple[str, float]] = []
 
-    # 2. Mood match
-    if mood_tag and book.category and book.category.name in MOOD_MAP.get(mood_tag, []):
-        score += 3
-        reasons.append(f"fits your '{mood_tag}' mood")
+    genre = book.category.name if book.category else None
+    author = book.author.name if book.author else None
 
-    # 3. Pace preference – fast readers prefer shorter books (approx <300 pages)
-    if profile.pace_preference == 'fast_read':
-        page_count = getattr(book, 'page_count', None)
-        if page_count is not None and page_count < 300:
-            score += 2
-            reasons.append('a quick read')
+    # 1. Genre affinity.
+    gw = affinity['genre_weights'].get(genre, 0.0) if genre else 0.0
+    if gw:
+        pts = gw * pe.GENRE_W
+        score += pts
+        if pts >= pe.WHY_THRESHOLD:
+            contributions.append((f"matches your taste for {genre}", pts))
 
-    # 4. Skill level – advanced readers get longer / more complex books
-    if profile.skill_level == 'advanced':
-        page_count = getattr(book, 'page_count', None)
-        if page_count is not None and page_count > 500:
-            score += 2
-            reasons.append('a deep, substantial work')
+    # 2. Author affinity (weighted higher than genre).
+    aw = affinity['author_weights'].get(author, 0.0) if author else 0.0
+    if aw:
+        pts = aw * pe.AUTHOR_W
+        score += pts
+        if pts >= pe.WHY_THRESHOLD:
+            contributions.append((f"you've enjoyed {author}'s writing", pts))
 
-    # 5. Popularity boost – the more times a book has been borrowed, the higher the score
-    borrowed = (book.total_copies - book.available_copies)
-    popularity_bonus = borrowed // 5  # every 5 borrows adds 1 point
-    if popularity_bonus:
-        score += popularity_bonus
-        reasons.append('popular among other readers')
+    # 3. Rating — quality floor. Penalize very low-rated books, but soften the
+    #    penalty for users whose history shows they enjoy divisive/niche picks.
+    rating = book.rating or 0.0
+    rating_pts = (rating / 5.0) * pe.RATING_W
+    if rating and rating < pe.LOW_RATING_CUTOFF:
+        penalty = ((pe.LOW_RATING_CUTOFF - rating) * pe.LOW_RATING_PENALTY
+                   * (1.0 - affinity['divisive_tolerance']))
+        rating_pts -= penalty
+    score += rating_pts
+    if rating >= 4.3:
+        contributions.append((f"highly rated at {rating:.1f}★", rating_pts))
 
-    # 6. Learned genre weight
-    genre_weights = profile.genre_weights or {}
-    if book.category and book.category.name in genre_weights:
-        gw = max(WEIGHT_FLOOR, min(WEIGHT_CEIL, genre_weights[book.category.name]))
-        if gw != 0:
-            score += gw
-            if gw >= 2:
-                reasons.append(f"you've been enjoying {book.category.name} lately")
+    # 4. Recency — nudge toward the era (recent vs classic) the user skews to.
+    if book.publish_year and affinity['recency_bias']:
+        rec_pts = pe.recency_score(book.publish_year) * affinity['recency_bias'] * pe.RECENCY_W
+        score += rec_pts
+        if rec_pts >= pe.WHY_THRESHOLD:
+            era = "a recent release" if affinity['recency_bias'] > 0 else "a timeless classic"
+            contributions.append((f"{era}, just how you like them", rec_pts))
 
-    # 7. Learned author weight
-    author_weights = profile.author_weights or {}
-    if book.author and book.author.name in author_weights:
-        aw = max(WEIGHT_FLOOR, min(WEIGHT_CEIL, author_weights[book.author.name]))
-        if aw != 0:
-            score += aw
-            if aw >= 2:
-                reasons.append(f"you like {book.author.name}'s writing")
+    # 5. Popularity — mild "famous book" boost, strong for apprentices who have
+    #    no taste history, weak for regulars who've earned personalization.
+    pop = book.popularity_score or 0.0
+    pop_pts = pop * affinity['popularity_sensitivity'] * pe.POPULARITY_W
+    score += pop_pts
+    if pop_pts >= pe.WHY_THRESHOLD:
+        contributions.append(("a crowd-pleaser other patrons love", pop_pts))
 
-    return score, reasons
+    # 6. Mood — situational nudge for the current request.
+    if mood_tag and genre and genre in MOOD_MAP.get(mood_tag, []):
+        score += pe.MOOD_W
+        contributions.append((f"fits your '{mood_tag}' mood", pe.MOOD_W))
+
+    # 7. Reading level / pace — match book length to the reader. A reader who
+    #    is advanced OR prefers a slow burn leans long; a beginner OR fast
+    #    reader leans short. Skipped entirely when page_count is unknown.
+    pages = book.page_count
+    if pages:
+        skill = affinity.get('skill_level')
+        pace = affinity.get('pace_preference')
+        wants_long = skill == 'advanced' or pace == 'slow_burn'
+        wants_short = skill == 'beginner' or pace == 'fast_read'
+        if wants_long and pages >= pe.LONG_BOOK_PAGES:
+            score += pe.SKILL_LENGTH_W
+            contributions.append(("a substantial, in-depth read", pe.SKILL_LENGTH_W))
+        elif wants_short and pages <= pe.SHORT_BOOK_PAGES:
+            score += pe.SKILL_LENGTH_W
+            contributions.append(("an approachable, quick read", pe.SKILL_LENGTH_W))
+        elif wants_short and pages >= pe.LONG_BOOK_PAGES:
+            # Gently steer a beginner / fast reader away from a doorstop.
+            score -= pe.MISMATCH_PENALTY
+
+    return score, contributions
+
+
+def _top_reasons(contributions: List[Tuple[str, float]], limit: int = 3) -> List[str]:
+    """Pick the highest-impact positive contributions as why-line reasons."""
+    positive = [c for c in contributions if c[1] > 0]
+    positive.sort(key=lambda c: c[1], reverse=True)
+    return [text for text, _ in positive[:limit]]
 
 
 def recommend(profile: BaristaProfile, mood_tag: str) -> Tuple[Book, List[str]]:
     """Select a book for the given profile and mood.
-    Returns the chosen ``Book`` instance and the list of textual reasons that
-    contributed to the selection.
-    The algorithm:
-    1. Filter to books with available copies.
-    2. Exclude books the user has already borrowed and recently declined.
-    3. Score each remaining candidate using ``_score_book``.
-    4. Take the top‑3 highest‑scoring books (or fewer if not enough candidates).
-    5. Randomly pick one of those top‑3 to keep the experience varied.
+
+    Returns the chosen ``Book`` and the 2-3 signals that contributed most to
+    its score (for the why-line). Scores every available candidate with
+    ``_score_book`` against the user's affinity, then picks one of the top-3
+    at random for variety.
     """
     candidates = _get_candidates(profile)
     if not candidates:
         return None, []
 
-    # Score each candidate
+    affinity = pe.compute_user_affinity(profile.user_id)
+
     scored = []
     for book in candidates:
-        score, reasons = _score_book(book, profile, mood_tag)
-        scored.append((book, score, reasons))
+        score, contribs = _score_book(book, affinity, mood_tag)
+        scored.append((book, score, contribs))
 
-    # Sort by score descending, then by popularity (borrow count) descending
-    scored.sort(key=lambda x: (x[1], x[0].total_copies - x[0].available_copies), reverse=True)
+    # Sort by score, breaking ties with popularity so a stronger crowd-pleaser
+    # wins an otherwise even matchup.
+    scored.sort(key=lambda x: (x[1], x[0].popularity_score or 0.0), reverse=True)
 
-    # Take the top‑3 (or fewer) and pick one at random for variety
     top = scored[:3]
-    chosen_book, _, chosen_reasons = random.choice(top)
-    return chosen_book, chosen_reasons
+    chosen_book, _, chosen_contribs = random.choice(top)
+    return chosen_book, _top_reasons(chosen_contribs)
 
 
 def get_swipe_deck(profile: BaristaProfile, count: int = 5) -> list[dict]:
-    """Return *count* diverse candidate books for the swipe‑deck mode.
+    """Return *count* diverse candidate books for the swipe-deck mode.
 
-    Selection: fill from top genres (via learned weights), then pad with
-    wildcards from genres the user hasn't interacted with.  Apprentices
-    get more wildcards to promote exploration.
+    Fills from the user's top genres (via affinity), then pads with wildcards
+    from genres they haven't positively engaged with. Apprentices get more
+    wildcards to promote exploration.
     """
     candidates = _get_candidates(profile)
     if not candidates:
         return []
 
-    genre_weights = profile.genre_weights or {}
+    affinity = pe.compute_user_affinity(profile.user_id)
     is_apprentice = (profile.relationship_stage == 'apprentice')
 
-    # Determine wildcard budget
+    # Wildcard budget — apprentices explore more.
     wildcard_count = 2 if is_apprentice else 1
     if count > 5:
         wildcard_count = 3 if is_apprentice else 2
     preference_count = max(1, count - wildcard_count)
 
-    # Score all candidates
     scored = []
     for book in candidates:
-        score, reasons = _score_book(book, profile, mood_tag=None)
-        scored.append((book, score, reasons))
+        score, contribs = _score_book(book, affinity, mood_tag=None)
+        scored.append((book, score, _top_reasons(contribs)))
     scored.sort(key=lambda x: x[1], reverse=True)
 
-    # Top genres the user has interacted with (positive weight)
-    interacted_genres = {g for g, w in genre_weights.items() if w > 0}
-
-    # Split into preference pool and wildcard pool
+    interacted_genres = {g for g, w in affinity['genre_weights'].items() if w > 0}
     pref_pool = [s for s in scored if s[0].category and s[0].category.name in interacted_genres]
-    wild_pool = [s for s in scored if s[0].category and s[0].category.name not in interacted_genres]
+    wild_pool = [s for s in scored if not (s[0].category and s[0].category.name in interacted_genres)]
 
-    # If the user has no learned preferences yet, everything is a wildcard
+    # No learned preferences yet → everything is a wildcard.
     if not pref_pool:
         pref_pool = scored
         wild_pool = []
 
-    # Select preference books — pick from diverse genres
     selected = []
-    genres_used = set()
     for book, score, reasons in pref_pool:
         if len(selected) >= preference_count:
             break
         genre = book.category.name if book.category else None
-        # Allow max 3 books per genre for variety
-        genre_occurrences = sum(1 for b, _, _ in selected if b.category and b.category.name == genre)
-        if genre_occurrences < 3:
+        genre_occurrences = sum(
+            1 for b, _, _ in selected if b.category and b.category.name == genre)
+        if genre_occurrences < 3:   # max 3 per genre for variety
             selected.append((book, score, reasons))
-            if genre:
-                genres_used.add(genre)
 
-    # Select wildcards
     random.shuffle(wild_pool)
-    wildcards = wild_pool[:wildcard_count]
-    selected.extend(wildcards)
-
-    # Shuffle the final deck so wildcards aren't always at the end
+    selected.extend(wild_pool[:wildcard_count])
     random.shuffle(selected)
 
     return [
-        {
-            'book': book.to_dict(),
-            'score': score,
-            'reasons': reasons,
-        }
+        {'book': book.to_dict(), 'score': round(score, 3), 'reasons': reasons}
         for book, score, reasons in selected[:count]
     ]
 
 
 def get_spin_candidates(profile: BaristaProfile, count: int = 6) -> list:
-    """Return *count* books for the spin‑wheel mode.
+    """Return *count* books for the spin-wheel mode.
 
-    Regulars: 4 from preferences + 2 wildcards.
-    Apprentices: 3 from preferences + 3 wildcards.
+    Regulars: 4 preference + 2 wildcards.  Apprentices: 3 + 3.
     """
     candidates = _get_candidates(profile)
     if not candidates:
         return []
 
-    genre_weights = profile.genre_weights or {}
+    affinity = pe.compute_user_affinity(profile.user_id)
     is_apprentice = (profile.relationship_stage == 'apprentice')
     wildcard_count = 3 if is_apprentice else 2
     preference_count = count - wildcard_count
 
-    # Score all candidates
     scored = []
     for book in candidates:
-        score, _ = _score_book(book, profile, mood_tag=None)
+        score, _ = _score_book(book, affinity, mood_tag=None)
         scored.append((book, score))
     scored.sort(key=lambda x: x[1], reverse=True)
 
-    interacted_genres = {g for g, w in genre_weights.items() if w > 0}
+    interacted_genres = {g for g, w in affinity['genre_weights'].items() if w > 0}
     pref_pool = [s for s in scored if s[0].category and s[0].category.name in interacted_genres]
-    wild_pool = [s for s in scored if s[0].category and s[0].category.name not in interacted_genres]
+    wild_pool = [s for s in scored if not (s[0].category and s[0].category.name in interacted_genres)]
 
     if not pref_pool:
         pref_pool = scored
         wild_pool = []
 
     selected_books = [book for book, _ in pref_pool[:preference_count]]
-
     random.shuffle(wild_pool)
     selected_books.extend([book for book, _ in wild_pool[:wildcard_count]])
 
-    # Pad if we don't have enough
+    # Pad if short.
     if len(selected_books) < count:
         remaining = [book for book, _ in scored if book not in selected_books]
         selected_books.extend(remaining[:count - len(selected_books)])
