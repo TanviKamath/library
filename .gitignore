@@ -65,7 +65,6 @@ venv/
 
 # Misc
 npmrc
-package-lock.json
 yarn.lock
 *.zip
 ezgif*
