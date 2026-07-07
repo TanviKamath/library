@@ -1,25 +1,36 @@
-from flask import Flask
+from flask import Flask, send_from_directory, abort
 from .config import Config
 from .extensions import db, migrate, jwt, cors, mail, scheduler
 import os
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    # In prod the Docker build drops the Vite output at backend/static (see Dockerfile).
+    dist = os.environ.get('FRONTEND_DIST', os.path.join(os.path.dirname(__file__), '..', 'static'))
+    app = Flask(__name__, static_folder=dist, static_url_path='')
     app.config.from_object(config_class)
 
     from .extensions import db, migrate, jwt, cors, mail, scheduler, limiter, talisman, cache
-    
+
     # Initialize Flask extensions here
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    # Same-origin in prod means CORS is unnecessary, but keep it env-driven for flexibility.
+    origins = os.environ.get(
+        'CORS_ORIGINS',
+        'http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173'
+    ).split(',')
     cors.init_app(app, resources={r"/api/*": {
-        "origins": ["http://localhost:8080", "http://127.0.0.1:8080"],
+        "origins": origins,
         "supports_credentials": True
     }})
     mail.init_app(app)
     limiter.init_app(app)
-    talisman.init_app(app, force_https=False)  # Allow HTTP for local dev
+    talisman.init_app(
+        app,
+        force_https=app.config['IS_PROD'],   # HTTPS only in prod; allow HTTP for local dev
+        content_security_policy=None,        # default CSP blanks the React app — tighten later
+    )
     cache.init_app(app)
     
     # Initialize APScheduler only if not testing
@@ -49,7 +60,9 @@ def create_app(config_class=Config):
                 replace_existing=True
             )
 
-        if not scheduler.get_job('backup_database_job'):
+        # The backup job writes to local disk, which is ephemeral on Render — skip it in
+        # prod and rely on Render's managed Postgres backups instead.
+        if not app.config.get('IS_PROD') and not scheduler.get_job('backup_database_job'):
             scheduler.add_job(
                 id='backup_database_job',
                 func=backup_database,
@@ -87,5 +100,17 @@ def create_app(config_class=Config):
     @app.route('/api/health')
     def test_page():
         return {'status': 'ok'}
+
+    # SPA fallback — registered AFTER the /api blueprints so it never shadows the API.
+    # Serves the built React app and lets client-side (React Router) deep links resolve.
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_spa(path):
+        if path.startswith('api/'):
+            abort(404)  # never swallow API 404s
+        target = os.path.join(app.static_folder, path)
+        if path and os.path.exists(target):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, 'index.html')
 
     return app

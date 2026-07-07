@@ -1,0 +1,36 @@
+# Keep the Docker build context small & the image clean.
+
+# Node / build
+node_modules/
+dist/
+build/
+
+# Python
+**/__pycache__/
+*.py[cod]
+backend/venv/
+.pytest_cache/
+**/.pytest_cache/
+
+# Local dev DB & backups (prod uses managed Postgres)
+backend/app.db
+backend/backups/
+
+# Env files (secrets are injected via Render env vars)
+.env
+.env.local
+.env.*.local
+
+# Large local assets not needed in the image
+*.zip
+ezgif*
+downloaded_covers/
+downloaded_ebooks/
+
+# Git / editor / OS
+.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
