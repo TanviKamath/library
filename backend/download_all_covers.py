@@ -23,7 +23,11 @@ app = create_app()
 
 # Workspace root is one level above backend/
 WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-COVER_DIR = os.path.join(WORKSPACE_ROOT, 'public', 'covers')
+# In the production image the frontend build lands at backend/static/covers (see Dockerfile),
+# and there's no public/ dir. Prefer that when present; fall back to public/covers for local dev.
+_STATIC_COVERS = os.path.join(os.path.dirname(__file__), 'static', 'covers')
+_PUBLIC_COVERS = os.path.join(WORKSPACE_ROOT, 'public', 'covers')
+COVER_DIR = _STATIC_COVERS if os.path.isdir(_STATIC_COVERS) else _PUBLIC_COVERS
 
 HEADERS = {
     'User-Agent': (
