@@ -6,7 +6,9 @@ import os
 def create_app(config_class=Config):
     # In prod the Docker build drops the Vite output at backend/static (see Dockerfile).
     dist = os.environ.get('FRONTEND_DIST', os.path.join(os.path.dirname(__file__), '..', 'static'))
-    app = Flask(__name__, static_folder=dist, static_url_path='')
+    # static_folder=None disables Flask's implicit /<path:filename> static route, which would
+    # otherwise shadow the SPA catch-all below and 404 deep links instead of serving index.html.
+    app = Flask(__name__, static_folder=None)
     app.config.from_object(config_class)
 
     from .extensions import db, migrate, jwt, cors, mail, scheduler, limiter, talisman, cache
@@ -108,9 +110,9 @@ def create_app(config_class=Config):
     def serve_spa(path):
         if path.startswith('api/'):
             abort(404)  # never swallow API 404s
-        target = os.path.join(app.static_folder, path)
-        if path and os.path.exists(target):
-            return send_from_directory(app.static_folder, path)
-        return send_from_directory(app.static_folder, 'index.html')
+        target = os.path.join(dist, path)
+        if path and os.path.isfile(target):
+            return send_from_directory(dist, path)     # real asset (JS/CSS/covers/…)
+        return send_from_directory(dist, 'index.html')  # SPA fallback for client routes
 
     return app
