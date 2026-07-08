@@ -153,6 +153,30 @@
   font-weight: var(--fw-medium);
 }
 
+/* Prominent sign in / sign up switch, shown near the top of the form */
+.auth-toggle-top {
+  margin-bottom: var(--space-8);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  color: var(--color-charcoal);
+}
+
+/* Inline link-styled button for toggling between sign in / sign up */
+.auth-switch {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--color-terracotta);
+  font-weight: var(--fw-bold);
+  text-decoration: underline;
+}
+
+.auth-switch:hover {
+  opacity: 0.85;
+}
+
 .login-divider {
   display: flex;
   align-items: center;

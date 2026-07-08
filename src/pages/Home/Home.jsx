@@ -168,8 +168,8 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <Link to="/login" className={styles['hero-btn-primary']}>
-                      Sign In
+                    <Link to="/register" className={styles['hero-btn-primary']}>
+                      Sign In / Sign Up
                     </Link>
                     <Link to="/gallery" className={styles['hero-btn-secondary']}>
                       Enter the Sphere Library
@@ -178,11 +178,6 @@ export default function Home() {
                 )}
               </div>
             </div>
-          </div>
-
-          <div className={styles['scroll-indicator']}>
-            <span>Scroll</span>
-            <div className={styles['scroll-dot']} />
           </div>
         </div>
       </section>

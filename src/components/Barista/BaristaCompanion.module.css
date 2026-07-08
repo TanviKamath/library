@@ -184,7 +184,9 @@
 .dialogueWrapper {
   width: 46vw;
   max-width: 620px;
-  height: 92vh;
+  /* Flexible height — hug the content instead of a fixed tall panel,
+     but never grow past the viewport (long lists scroll inside). */
+  height: auto;
   max-height: 92vh;
   align-self: center;
   margin: 0 1.5vw 0 auto;
@@ -439,10 +441,12 @@
   padding: 6px 2px;
 }
 
-/* Choice-list states (greeting, onboarding, etc.) — spread the options
-   evenly down the panel so the spacing looks balanced. */
+/* Choice-list states (greeting, onboarding, etc.) — stack the options
+   directly under the speech bubble instead of spreading them down a tall
+   panel, so there's no dead space when there are only a couple of choices. */
 .choicesEven {
-  justify-content: space-evenly;
+  justify-content: flex-start;
+  flex: 0 1 auto;
 }
 
 /* Card states (recommendation) — keep the card + buttons together, centered,
@@ -573,7 +577,9 @@
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;
-    height: 42vh !important;
+    /* Extend Mr. Finn down so his faded lower half meets and tucks behind the
+       chat sheet — no flat brown band left between them. */
+    height: 62vh !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -594,7 +600,7 @@
     max-width: 100vw !important;
     max-height: 100% !important;
     object-fit: cover !important;
-    object-position: center 22% !important;
+    object-position: center 18% !important;
     filter: brightness(1.05) contrast(1.05) !important;
     animation: breathing 4s ease-in-out infinite !important;
   }
@@ -604,7 +610,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(20, 11, 7, 0) 50%, rgba(20, 11, 7, 0.95) 90%, #140b07 100%);
+    background: linear-gradient(180deg, rgba(20, 11, 7, 0) 55%, rgba(20, 11, 7, 0.85) 82%, #140b07 100%);
     pointer-events: none;
     z-index: 2;
   }
@@ -616,8 +622,8 @@
     width: 100vw;
     max-width: 100vw;
     height: auto;
-    max-height: 60vh;
-    min-height: 36vh;
+    max-height: 64vh;
+    min-height: 42vh;
     align-self: center;
     margin: 0;
     padding: 2.2rem 1.3rem 1.5rem;

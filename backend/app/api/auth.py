@@ -5,11 +5,12 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity,
     set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 )
+from datetime import datetime, timezone, timedelta
 from app.api import bp
 from app.models import User
 from app.extensions import db, limiter
 from app.utils.decorators import validate_json
-from app.schemas import LoginSchema
+from app.schemas import LoginSchema, RegisterSchema
 
 @bp.route('/auth/login', methods=['POST'])
 @limiter.limit("1000 per minute")
@@ -19,18 +20,52 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    user = User.query.filter_by(email=email).first()
-    if user and user.check_password(password):
-        access_token = create_access_token(identity=str(user.id))
-        refresh_token = create_refresh_token(identity=str(user.id))
+    user = User.query.filter(db.func.lower(User.email) == (email or '').strip().lower()).first()
+    if not user or not user.check_password(password):
+        return jsonify({'error': 'Invalid credentials'}), 401
 
-        # Return user info & access token in JSON body; tokens also go into HttpOnly cookies
-        response = jsonify({'user': user.to_dict(), 'access_token': access_token})
-        set_access_cookies(response, access_token)
-        set_refresh_cookies(response, refresh_token)
-        return response, 200
+    access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
 
-    return jsonify({'error': 'Invalid credentials'}), 401
+    # Return user info & access token in JSON body; tokens also go into HttpOnly cookies
+    response = jsonify({'user': user.to_dict(), 'access_token': access_token})
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(response, refresh_token)
+    return response, 200
+
+@bp.route('/auth/register', methods=['POST'])
+@limiter.limit("20 per hour")
+@validate_json(RegisterSchema)
+def register():
+    """Public self-service signup. Creates a member and logs them straight in."""
+    data = request.validated_data
+    username = data['username'].strip()
+    email = data['email'].strip().lower()
+
+    # Reject duplicates (case-insensitive email match)
+    if db.session.query(User.id).filter(db.func.lower(User.email) == email).first():
+        return jsonify({'error': 'An account with this email already exists'}), 409
+    if db.session.query(User.id).filter_by(username=username).first():
+        return jsonify({'error': 'That username is already taken'}), 409
+
+    new_user = User(  # pyrefly: ignore
+        username=username,  # pyrefly: ignore
+        email=email,  # pyrefly: ignore
+        full_name=data.get('full_name', '').strip() or username,  # pyrefly: ignore
+        role='member',  # pyrefly: ignore
+        membership_expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=365)  # pyrefly: ignore
+    )
+    new_user.set_password(data['password'])
+    db.session.add(new_user)
+    db.session.commit()
+
+    access_token = create_access_token(identity=str(new_user.id))
+    refresh_token = create_refresh_token(identity=str(new_user.id))
+
+    response = jsonify({'user': new_user.to_dict(), 'access_token': access_token})
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(response, refresh_token)
+    return response, 201
 
 @bp.route('/auth/refresh', methods=['POST'])
 @jwt_required(refresh=True)

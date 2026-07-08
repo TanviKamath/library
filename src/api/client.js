@@ -51,8 +51,12 @@ async function request(endpoint, options = {}) {
 
   // Handle 401 — session expired
   if (response.status === 401) {
-    // If logging in, refreshing, or logging out, do not attempt to refresh
-    if (['/auth/login', '/auth/refresh', '/auth/logout'].includes(endpoint)) {
+    // On login, surface the server's specific message (e.g. "Incorrect password")
+    if (endpoint === '/auth/login') {
+      return handleResponse(response);
+    }
+    // Refreshing/logging out: do not attempt to refresh
+    if (['/auth/refresh', '/auth/logout'].includes(endpoint)) {
       throw new ApiError('Not authenticated', 401);
     }
 

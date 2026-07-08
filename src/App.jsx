@@ -3,7 +3,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGate } from './components/RoleGate';
 import { AppLayout } from './components/AppLayout';
 import Home from './pages/Home/Home';
-import Login from './pages/Auth/Login';
+import Auth from './pages/Auth/Auth';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Browse from './pages/Browse/Browse';
 import BookDetail from './pages/Browse/BookDetail';
@@ -24,7 +24,8 @@ export default function App() {
       <Routes>
       {/* Public routes */}
       <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Auth initialMode="signin" />} />
+      <Route path="/register" element={<Auth initialMode="signup" />} />
       <Route path="/gallery" element={<BookDomeGallery />} />
 
       {/* Protected app routes */}
