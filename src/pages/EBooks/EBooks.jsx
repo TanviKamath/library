@@ -35,7 +35,7 @@ export default function EBooks() {
       setLoading(true);
       try {
         const searchParam = debouncedQuery ? `&search=${encodeURIComponent(debouncedQuery)}` : '';
-        const data = await api.get(`/books?ebook_only=true&page=${page}&limit=12${searchParam}`);
+        const data = await api.get(`/books?ebook_only=true&page=${page}&limit=14${searchParam}`);
         setBooks(data.books || []);
         setPagination(data.pagination || { page: 1, pages: 1 });
       } catch {

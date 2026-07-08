@@ -79,7 +79,7 @@ export default function Browse() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        limit: viewMode === 'sphere' ? '60' : '28',
+        limit: viewMode === 'sphere' ? '60' : '21',
         sort,
       });
       if (search) params.set('search', search);

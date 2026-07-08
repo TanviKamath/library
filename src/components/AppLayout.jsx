@@ -6,7 +6,7 @@ import styles from './AppLayout.module.css';
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
-    return saved !== null ? saved === 'true' : false;
+    return saved !== null ? saved === 'true' : true;
   });
   const [isHovered, setIsHovered] = useState(false);
 

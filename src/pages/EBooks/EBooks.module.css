@@ -88,8 +88,21 @@
 
 .shelf-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* Fixed 7 columns at desktop → clean 7 × 2 = 14 e-books per page. */
+  grid-template-columns: repeat(7, 1fr);
   gap: var(--space-5);
+}
+
+@media (max-width: 1400px) {
+  .shelf-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+@media (max-width: 1100px) {
+  .shelf-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 880px) {
+  .shelf-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 .shelf-card {

@@ -516,6 +516,7 @@ class App {
     this.isDown = true;
     this.scroll.position = this.scroll.current;
     this.start = e.touches ? e.touches[0].clientX : e.clientX;
+    this.startY = e.touches ? e.touches[0].clientY : e.clientY;
     this.clickStartTime = Date.now();
   }
   onTouchMove(e) {
@@ -528,16 +529,46 @@ class App {
     this.isDown = false;
     this.onCheck();
 
-    if (Date.now() - this.clickStartTime < 250) {
-      this.handleCardClick();
+    const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+    const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    const movedDist = Math.hypot(endX - this.start, endY - (this.startY ?? endY));
+
+    // Treat as a click only if it was quick AND barely moved — otherwise it's a
+    // drag to spin the carousel, not a card selection.
+    if (Date.now() - this.clickStartTime < 250 && movedDist < 12) {
+      this.handleCardClick(endX);
     }
   }
-  handleCardClick() {
+  // Selects the card under the pointer (falls back to the centered card if no
+  // coordinate is given). Maps the click's screen x into world space and finds
+  // the nearest card plane.
+  handleCardClick(clientX) {
     if (!this.medias || !this.medias[0]) return;
+
+    if (clientX != null && this.container && this.viewport) {
+      const rect = this.container.getBoundingClientRect();
+      const relX = clientX - rect.left;
+      const worldX = (relX / this.screen.width - 0.5) * this.viewport.width;
+
+      let nearest = null;
+      let nearestDist = Infinity;
+      for (const media of this.medias) {
+        const dist = Math.abs(media.plane.position.x - worldX);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearest = media;
+        }
+      }
+      if (nearest && this.onSelectCard) {
+        this.onSelectCard(nearest.index % this.galleryLength);
+        return;
+      }
+    }
+
+    // Fallback: centered card
     const width = this.medias[0].width;
-    let normalizedTarget = this.scroll.target;
     const totalOriginalWidth = width * this.galleryLength;
-    let mappedScroll = ((normalizedTarget % totalOriginalWidth) + totalOriginalWidth) % totalOriginalWidth;
+    const mappedScroll = ((this.scroll.target % totalOriginalWidth) + totalOriginalWidth) % totalOriginalWidth;
     const index = Math.round(mappedScroll / width) % this.galleryLength;
     if (this.onSelectCard) {
       this.onSelectCard(index);
@@ -622,6 +653,23 @@ class App {
     this.boundOnKeyDown = this.onKeyDown.bind(this);
 
     window.addEventListener('resize', this.boundOnResize);
+
+    // The window doesn't resize when the sidebar collapses/expands — only this
+    // container does. Watch the container directly so the canvas re-measures and
+    // cards don't get clipped on the right edge. (rAF-throttled to avoid
+    // ResizeObserver loop warnings during the sidebar transition.)
+    if (typeof ResizeObserver !== 'undefined') {
+      let resizeRAF = null;
+      this.resizeObserver = new ResizeObserver(() => {
+        if (resizeRAF) return;
+        resizeRAF = window.requestAnimationFrame(() => {
+          resizeRAF = null;
+          this.onResize();
+        });
+      });
+      this.resizeObserver.observe(this.container);
+    }
+
     window.addEventListener('mousewheel', this.boundOnWheel);
     window.addEventListener('wheel', this.boundOnWheel);
     this.container.addEventListener('mousedown', this.boundOnTouchDown);
@@ -636,6 +684,10 @@ class App {
   destroy() {
     window.cancelAnimationFrame(this.raf);
     window.removeEventListener('resize', this.boundOnResize);
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     window.removeEventListener('mousewheel', this.boundOnWheel);
     window.removeEventListener('wheel', this.boundOnWheel);
     this.container?.removeEventListener('mousedown', this.boundOnTouchDown);
