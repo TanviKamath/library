@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import { BottomNav } from './BottomNav';
 import styles from './AppLayout.module.css';
 
 export function AppLayout() {
@@ -31,6 +32,7 @@ export function AppLayout() {
       <main className={`${styles['app-main']} ${!isExpanded ? styles.collapsed : ''}`}>
         <Outlet />
       </main>
+      <BottomNav />
     </div>
   );
 }

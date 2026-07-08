@@ -144,6 +144,26 @@
   box-shadow: var(--shadow-sm);
 }
 
+@media (max-width: 640px) {
+  .title {
+    font-size: var(--fs-2xl);
+  }
+  .galleryWrapper {
+    height: 400px;
+    border-radius: 24px;
+  }
+  .card3d {
+    width: 200px;
+    height: 280px;
+  }
+  .bookTitle {
+    font-size: var(--fs-xl);
+  }
+  .bookDesc {
+    max-height: 96px;
+  }
+}
+
 /* ── Loading Spinner ── */
 .loadingContainer {
   display: flex;

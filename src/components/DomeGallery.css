@@ -369,11 +369,123 @@ main.sphere-main {
   bottom: 0;
 }
 
+/* ── Sphere Library floating header ── */
+.dome-nav {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 50;
+  display: flex;
+  gap: 12px;
+}
+
+.dome-nav-btn,
+.dome-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.dome-nav-btn {
+  background: rgba(69, 26, 3, 0.1);
+  color: #451a03;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(69, 26, 3, 0.2);
+}
+
+.dome-nav-link {
+  background: var(--color-terracotta);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dome-titlebar {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 50;
+  color: #451a03;
+  text-align: right;
+  max-width: 45vw;
+}
+
+.dome-title {
+  font-size: 1.8rem;
+  font-family: var(--font-serif);
+  margin: 0 0 4px 0;
+  font-weight: 800;
+  color: #451a03;
+  line-height: 1.15;
+}
+
+.dome-subtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.85;
+  margin: 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .viewer {
     flex-direction: column;
     padding: 24px;
     justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .dome-nav {
+    top: 16px;
+    left: 16px;
+    gap: 8px;
+  }
+  .dome-nav-link {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+  /* Back becomes a compact round icon button (phone back gesture also works) */
+  .dome-back-label {
+    display: none;
+  }
+  .dome-nav-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+  }
+  .dome-titlebar {
+    top: 16px;
+    right: 16px;
+    max-width: 42vw;
+  }
+  .dome-title {
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+  /* Hide the drag hint on phones to avoid crowding the buttons */
+  .dome-subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .dome-nav-btn,
+  .dome-nav-link {
+    padding: 7px 10px;
+    font-size: 0.72rem;
+  }
+  .dome-title {
+    font-size: 1rem;
   }
 }

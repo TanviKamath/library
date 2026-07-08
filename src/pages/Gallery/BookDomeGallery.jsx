@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import DomeGallery from '../../components/DomeGallery';
 import { getProxiedImageUrl } from '../../utils/image';
@@ -54,51 +54,18 @@ export default function BookDomeGallery() {
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#fef3c7', overflow: 'hidden' }}>
       {/* Floating Header */}
-      <div style={{ position: 'absolute', top: 24, left: 24, zIndex: 50, display: 'flex', gap: '12px' }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(69, 26, 3, 0.1)',
-            color: '#451a03',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(69, 26, 3, 0.2)',
-            cursor: 'pointer',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            transition: 'all 0.2s'
-          }}
-        >
+      <div className="dome-nav">
+        <button className="dome-nav-btn" onClick={() => navigate(-1)} aria-label="Go back">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
           </svg>
-          Back
+          <span className="dome-back-label">Back</span>
         </button>
-        <Link
-          to="/app/browse"
-          style={{
-            padding: '10px 18px',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--color-terracotta)',
-            color: '#fff',
-            textDecoration: 'none',
-            fontWeight: 600,
-            fontSize: '0.9rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-        >
-          Catalog Grid View
-        </Link>
       </div>
 
-      <div style={{ position: 'absolute', top: 24, right: 24, zIndex: 50, color: '#451a03', textAlign: 'right' }}>
-        <h1 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-serif)', margin: '0 0 4px 0', fontWeight: 800, color: '#451a03' }}>
-          3D Book Sphere
-        </h1>
-        <p style={{ fontSize: '0.9rem', fontWeight: 600, opacity: 0.85, margin: 0 }}>
+      <div className="dome-titlebar">
+        <h1 className="dome-title">3D Book Sphere</h1>
+        <p className="dome-subtitle">
           Drag dome to rotate · Click cover to enlarge
         </p>
       </div>

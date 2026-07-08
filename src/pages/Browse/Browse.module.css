@@ -227,5 +227,17 @@
   }
   .controls {
     flex-direction: column;
+    align-items: stretch;
+  }
+  /* Search + every filter fills the row so they're easy to tap */
+  .search-wrap {
+    min-width: 0;
+    width: 100%;
+  }
+  .filter-select {
+    width: 100%;
+  }
+  .browse-header h1 {
+    font-size: var(--fs-xl);
   }
 }

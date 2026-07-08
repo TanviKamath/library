@@ -61,12 +61,49 @@ export default function Home() {
       ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
     }
 
+    // ── Auto-play the animation once on load, so users see it without
+    // scrolling. It advances frames over AUTOPLAY_MS, then hands control to
+    // scroll. Any real scroll interrupts it immediately so we never fight the
+    // user. Respects reduced-motion preferences.
+    const AUTOPLAY_MS = 5000;
+    const prefersReducedMotion =
+      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let rafId = null;
+    let autoStart = null;
+    let autoPlaying = !prefersReducedMotion;
+
+    function stopAutoplay() {
+      autoPlaying = false;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    function autoStep(ts) {
+      if (!autoPlaying) return;
+      if (autoStart == null) autoStart = ts;
+      const progress = Math.min(1, (ts - autoStart) / AUTOPLAY_MS);
+      const frameIndex = Math.min(Math.floor(progress * (SAMPLED_COUNT - 1)), SAMPLED_COUNT - 1);
+      drawFrame(frameIndex);
+      if (progress < 1) {
+        rafId = requestAnimationFrame(autoStep);
+      } else {
+        autoPlaying = false;
+      }
+    }
+
     function onScroll() {
       const hero = document.getElementById('hero-section');
       if (!hero) return;
 
       const rect = hero.getBoundingClientRect();
       const scrolled = -rect.top;
+
+      // A genuine scroll interrupts the intro auto-play and takes over.
+      if (scrolled > 0) stopAutoplay();
+      if (autoPlaying) return;
+
       const total = hero.offsetHeight - window.innerHeight;
       const progress = Math.max(0, Math.min(1, scrolled / total));
       const frameIndex = Math.min(Math.floor(progress * (SAMPLED_COUNT - 1)), SAMPLED_COUNT - 1);
@@ -77,9 +114,15 @@ export default function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
 
+    // Kick off the intro once the first frames are ready.
+    if (loaded && autoPlaying) {
+      rafId = requestAnimationFrame(autoStep);
+    }
+
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      stopAutoplay();
       // Cleanup images
       imagesRef.current = [];
     };

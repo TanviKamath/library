@@ -468,16 +468,17 @@ export default function BaristaCompanion() {
 
       {/* Cinematic overlay */}
       <div className={`${styles.rpgOverlay} ${isOpen ? styles.open : ''}`}>
-        <button className={styles.closeButton} onClick={handleClose} aria-label="Close">&times;</button>
-
         {/* Character sprite — animated with speaking or idle breathing state */}
         <div className={`${styles.characterContainer} ${isTyping ? styles.speaking : styles.idle}`}>
-          <img src="/barista_sprite.png" alt="Mr. Finn" className={styles.characterSprite} />
+          <picture style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
+            <source media="(max-width: 900px)" srcSet="/barista_avatar.jpg" />
+            <img src="/barista_sprite.png" alt="Mr. Finn" className={styles.characterSprite} />
+          </picture>
         </div>
-
 
         {/* Dialogue area — right side wooden menu board */}
         <div className={`${styles.dialogueWrapper} ${isInteractiveMode ? styles.fullWidthMode : ''}`}>
+          <button className={styles.closeButton} onClick={handleClose} aria-label="Close">&times;</button>
 
           {/* Speech bubble box aligned near Finn's mouth */}
           <div className={styles.dialogueBox} onClick={() => setIsTyping(false)}>

@@ -85,6 +85,7 @@ export function Sidebar({ collapsed, toggleCollapse, isHovered, setIsHovered }) 
   const isVisuallyCollapsed = collapsed && !isHovered;
 
   const handleMouseEnter = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 1024) return;
     if (!collapsed || !setIsHovered) return;
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     hoverTimerRef.current = setTimeout(() => {
@@ -93,6 +94,7 @@ export function Sidebar({ collapsed, toggleCollapse, isHovered, setIsHovered }) 
   };
 
   const handleMouseLeave = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 1024) return;
     if (!setIsHovered) return;
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     setIsHovered(false);

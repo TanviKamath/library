@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { getProxiedImageUrl } from '../../utils/image';
@@ -20,6 +20,24 @@ export default function EBooks() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const searchInputRef = useRef(null);
+  const [isPhoneLayout, setIsPhoneLayout] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPhoneLayout(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const displayBooks = useMemo(() => {
+    if (isPhoneLayout && books.length > 1 && books.length % 2 !== 0) {
+      return books.slice(0, books.length - 1);
+    }
+    return books;
+  }, [books, isPhoneLayout]);
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -101,8 +119,11 @@ export default function EBooks() {
           )}
         </div>
       ) : (
-        <div className={styles['shelf-grid']}>
-          {books.map(book => {
+        <div
+          className={styles['shelf-grid']}
+          style={isPhoneLayout && displayBooks.length === 1 ? { gridTemplateColumns: '1fr', justifyItems: 'center' } : undefined}
+        >
+          {displayBooks.map(book => {
             const progress = getReadingProgress(book.id);
             const pct = progress ? Math.round((progress.paragraph / progress.total) * 100) : 0;
 

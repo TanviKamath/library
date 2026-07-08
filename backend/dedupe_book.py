@@ -22,6 +22,7 @@ from app.models.transaction import Transaction
 from app.models.review import Review
 from app.models.like import UserBookLike
 from app.models.inventory import InventoryLog
+from app.models.barista import BaristaInteractionLog
 
 try:
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -73,6 +74,7 @@ def main():
             (Review, 'book_id'),
             (UserBookLike, 'book_id'),
             (InventoryLog, 'book_id'),
+            (BaristaInteractionLog, 'book_recommended_id'),
         ]
 
         moved_total = 0

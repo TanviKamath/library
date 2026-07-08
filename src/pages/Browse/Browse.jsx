@@ -67,6 +67,17 @@ export default function Browse() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'sphere'
+  const [isPhoneLayout, setIsPhoneLayout] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPhoneLayout(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Load categories once
   useEffect(() => {
@@ -77,9 +88,10 @@ export default function Browse() {
   const loadBooks = useCallback(async () => {
     setLoading(true);
     try {
+      const defaultLimit = isPhoneLayout ? '20' : '21';
       const params = new URLSearchParams({
         page: String(page),
-        limit: viewMode === 'sphere' ? '60' : '21',
+        limit: viewMode === 'sphere' ? '60' : defaultLimit,
         sort,
       });
       if (search) params.set('search', search);
@@ -93,7 +105,7 @@ export default function Browse() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, category, sort, viewMode]);
+  }, [page, search, category, sort, viewMode, isPhoneLayout]);
 
   useEffect(() => { loadBooks(); }, [loadBooks]);
 
@@ -110,6 +122,13 @@ export default function Browse() {
   function handleLikeToggle(bookId, isLiked) {
     setBooks(prev => prev.map(b => b.id === bookId ? { ...b, is_liked: isLiked } : b));
   }
+
+  const displayBooks = useMemo(() => {
+    if (isPhoneLayout && books.length > 1 && books.length % 2 !== 0) {
+      return books.slice(0, books.length - 1);
+    }
+    return books;
+  }, [books, isPhoneLayout]);
 
   const domeImages = useMemo(() => {
     const covers = books.map((b, i) => {
@@ -280,9 +299,14 @@ export default function Browse() {
           <p>Try adjusting your search or filters.</p>
         </div>
       ) : (
-        <div className={styles['book-grid']}>
-          {books.map(book => (
-            <BookCard key={book.id} book={book} onLikeToggle={handleLikeToggle} />
+        <div
+          className={styles['book-grid']}
+          style={isPhoneLayout && displayBooks.length === 1 ? { gridTemplateColumns: '1fr', justifyItems: 'center' } : undefined}
+        >
+          {displayBooks.map(book => (
+            <div key={book.id} style={isPhoneLayout && displayBooks.length === 1 ? { width: '100%', maxWidth: '280px' } : { width: '100%' }}>
+              <BookCard book={book} onLikeToggle={handleLikeToggle} />
+            </div>
           ))}
         </div>
       )}

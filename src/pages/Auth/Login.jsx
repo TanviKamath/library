@@ -60,7 +60,10 @@ export default function Login() {
       <div className={styles['login-form-side']}>
         <div className={styles['login-form-container']}>
           <div className={styles['login-brand']}>
-            <h2>Brew & Borrow</h2>
+            <div className={styles['brand-header']}>
+              <img src="/coffee-cup.png" alt="Brew & Borrow" className={styles['login-logo']} />
+              <h2>Brew & Borrow</h2>
+            </div>
             <p>Sign in to your library account</p>
           </div>
 

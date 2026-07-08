@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
@@ -52,6 +52,23 @@ function MemberDashboard() {
   const [borrows, setBorrows] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isPhoneLayout, setIsPhoneLayout] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsPhoneLayout(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const displayRecs = useMemo(() => {
+    const sliced = recommendations.slice(0, 14);
+    if (isPhoneLayout && sliced.length > 1 && sliced.length % 2 !== 0) {
+      return sliced.slice(0, sliced.length - 1);
+    }
+    return sliced;
+  }, [recommendations, isPhoneLayout]);
 
   useEffect(() => {
     async function load() {
@@ -171,7 +188,7 @@ function MemberDashboard() {
             <h2>Recommended for You</h2>
           </div>
           <div className={styles['rec-grid']}>
-            {recommendations.slice(0, 14).map(book => (
+            {displayRecs.map(book => (
               <div
                 key={book.id}
                 className={styles['rec-card']}
@@ -571,6 +588,22 @@ function FavouritesSection() {
   const navigate = useNavigate();
   const [likes, setLikes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isPhoneLayout, setIsPhoneLayout] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsPhoneLayout(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const displayLikes = useMemo(() => {
+    if (isPhoneLayout && likes.length > 1 && likes.length % 2 !== 0) {
+      return likes.slice(0, likes.length - 1);
+    }
+    return likes;
+  }, [likes, isPhoneLayout]);
 
   useEffect(() => {
     async function loadLikes() {
@@ -619,9 +652,14 @@ function FavouritesSection() {
           </button>
         </div>
       ) : (
-        <div className={styles['book-grid']}>
-          {likes.map(book => (
-            <BookCard key={book.id} book={book} onLikeToggle={handleLikeToggle} />
+        <div
+          className={styles['book-grid']}
+          style={isPhoneLayout && displayLikes.length === 1 ? { gridTemplateColumns: '1fr', justifyItems: 'center' } : undefined}
+        >
+          {displayLikes.map(book => (
+            <div key={book.id} style={isPhoneLayout && displayLikes.length === 1 ? { width: '100%', maxWidth: '280px' } : { width: '100%' }}>
+              <BookCard book={book} onLikeToggle={handleLikeToggle} />
+            </div>
           ))}
         </div>
       )}

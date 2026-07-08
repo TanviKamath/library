@@ -92,16 +92,33 @@
   margin-bottom: var(--space-10);
 }
 
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
 .login-brand h2 {
   font-family: var(--font-serif);
   font-size: var(--fs-2xl);
   color: var(--color-espresso);
-  margin-bottom: var(--space-2);
+  margin-bottom: 0;
 }
 
 .login-brand p {
   color: var(--color-charcoal-light);
   font-size: var(--fs-base);
+}
+
+/* Logo — shown besides Brew & Borrow */
+.login-logo {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 0;
+  filter: drop-shadow(0 4px 8px rgba(69, 26, 3, 0.18));
 }
 
 .login-form {
@@ -190,4 +207,42 @@
 
 .password-toggle-btn:active {
   transform: scale(0.92);
+}
+
+/* ── Phone layout (editorial panel is hidden below 768px) ── */
+@media (max-width: 767px) {
+  .login-form-side {
+    padding: var(--space-8) var(--space-6);
+    align-items: flex-start;
+  }
+
+  .login-form-container {
+    margin-top: 8vh;
+  }
+
+  .login-brand {
+    text-align: center;
+    margin-bottom: var(--space-8);
+  }
+
+  .brand-header {
+    justify-content: center;
+  }
+
+  .login-logo {
+    display: block;
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    margin: 0;
+    filter: drop-shadow(0 6px 14px rgba(69, 26, 3, 0.22));
+  }
+
+  .login-brand h2 {
+    font-size: var(--fs-3xl);
+  }
+
+  .login-footer {
+    margin-top: var(--space-6);
+  }
 }

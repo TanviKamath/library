@@ -16,6 +16,8 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* Fill the whole screen, including behind notches / rounded corners */
+  background-color: var(--color-cream);
 }
 
 body {
@@ -27,6 +29,17 @@ body {
   background-color: var(--color-cream);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Guard against a stray wide element shrinking the whole page on mobile */
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 img,

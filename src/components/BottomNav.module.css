@@ -1,0 +1,229 @@
+/* ── App-style bottom navigation (phones / tablets) ── */
+.bottomNav {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .bottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--color-ivory);
+    border-top: 1px solid var(--color-divider);
+    box-shadow: 0 -2px 14px rgba(44, 24, 16, 0.07);
+    z-index: var(--z-sticky);
+    justify-content: space-around;
+    align-items: stretch;
+  }
+}
+
+.tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 2px;
+  border: none;
+  background: none;
+  color: var(--color-charcoal-light);
+  text-decoration: none;
+  font-size: 10.5px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease;
+}
+
+.tab .icon {
+  display: flex;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.tab .icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.tab .label {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab.active {
+  color: var(--color-terracotta);
+}
+
+.tab.active .icon {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* Small active indicator along the top edge of the bar */
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 26px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--color-terracotta);
+}
+
+.tab:active .icon {
+  transform: scale(0.9);
+}
+
+/* ── "More" bottom sheet ── */
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 24, 16, 0.4);
+  z-index: calc(var(--z-sticky) + 1);
+  animation: sheetFade 0.2s var(--ease-out);
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--z-sticky) + 2);
+  background: var(--color-ivory);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 -8px 32px rgba(44, 24, 16, 0.18);
+  padding: var(--space-2) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  animation: sheetUp 0.28s var(--ease-out);
+}
+
+@keyframes sheetFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheetHandle {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-divider-strong);
+  margin: 6px auto var(--space-3);
+}
+
+.sheetUser {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+  border: none;
+  border-bottom: 1px solid var(--color-divider);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sheetAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: var(--color-terracotta);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  flex-shrink: 0;
+}
+
+.sheetUserInfo {
+  min-width: 0;
+}
+
+.sheetName {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  color: var(--color-espresso);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheetRole {
+  font-size: var(--fs-xs);
+  color: var(--color-charcoal-light);
+  text-transform: capitalize;
+}
+
+.sheetLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sheetLink,
+.sheetLogout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-charcoal);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-regular);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sheetLink:hover,
+.sheetLink.active {
+  background: var(--color-terracotta-bg);
+  color: var(--color-terracotta);
+}
+
+.sheetLinkIcon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sheetLinkIcon svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.75;
+}
+
+.sheetLink.active .sheetLinkIcon svg {
+  opacity: 1;
+}
+
+.sheetLogout {
+  color: var(--color-error);
+  margin-top: var(--space-1);
+}
+
+.sheetLogout:hover {
+  background: var(--color-error-bg);
+}
