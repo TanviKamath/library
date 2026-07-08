@@ -27,39 +27,55 @@ export default function Home() {
     const ctx = canvas.getContext('2d');
 
     // Preload sampled frames
-    let loadedCount = 0;
     const images = [];
+    // The frame we currently want on screen. We always try to draw this, and
+    // re-draw it if its image arrives later (important on slow phone networks).
+    let desiredIndex = 0;
 
-    for (let i = 0; i < SAMPLED_COUNT; i++) {
-      const img = new Image();
-      img.src = getFramePath(i);
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount >= Math.min(5, SAMPLED_COUNT)) {
-          // Show first frame early
-          if (!loaded) {
-            setLoaded(true);
-            drawFrame(0);
-          }
-        }
-      };
-      images.push(img);
-    }
-    imagesRef.current = images;
+    const isReady = (img) => img && img.complete && img.naturalWidth > 0;
 
     function drawFrame(index) {
       const img = images[index];
-      if (!img || !img.complete) return;
+      if (!isReady(img)) return false;
+      desiredIndex = index;
 
-      canvas.width = canvas.offsetWidth * (window.devicePixelRatio > 1 ? 2 : 1);
-      canvas.height = canvas.offsetHeight * (window.devicePixelRatio > 1 ? 2 : 1);
+      const dpr = window.devicePixelRatio > 1 ? 2 : 1;
+      const w = canvas.offsetWidth * dpr;
+      const h = canvas.offsetHeight * dpr;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
 
       // Draw cover
       const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
       const x = (canvas.width - img.width * scale) / 2;
       const y = (canvas.height - img.height * scale) / 2;
       ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      return true;
     }
+
+    let firstShown = false;
+    for (let i = 0; i < SAMPLED_COUNT; i++) {
+      const img = new Image();
+      img.decoding = 'async';
+      const onDone = () => {
+        // As soon as the very first frame is ready, reveal the canvas with a
+        // static poster — so even if the animation can't play we're never blank.
+        if (!firstShown && isReady(images[0])) {
+          firstShown = true;
+          setLoaded(true);
+          drawFrame(0);
+        }
+        // If the frame we're waiting to show just finished loading, draw it now.
+        if (i === desiredIndex) drawFrame(desiredIndex);
+      };
+      img.onload = onDone;
+      img.onerror = onDone; // a failed frame must not stall the loader
+      img.src = getFramePath(i);
+      images.push(img);
+    }
+    imagesRef.current = images;
 
     // ── Auto-play the animation once on load, so users see it without
     // scrolling. It advances frames over AUTOPLAY_MS, then hands control to
@@ -82,6 +98,13 @@ export default function Home() {
 
     function autoStep(ts) {
       if (!autoPlaying) return;
+      // Don't start the 5s timeline until the first frame is actually ready —
+      // otherwise on a slow phone connection the whole animation elapses while
+      // the images are still downloading and nothing is ever drawn.
+      if (!isReady(images[0])) {
+        rafId = requestAnimationFrame(autoStep);
+        return;
+      }
       if (autoStart == null) autoStart = ts;
       const progress = Math.min(1, (ts - autoStart) / AUTOPLAY_MS);
       const frameIndex = Math.min(Math.floor(progress * (SAMPLED_COUNT - 1)), SAMPLED_COUNT - 1);
@@ -105,7 +128,7 @@ export default function Home() {
       if (autoPlaying) return;
 
       const total = hero.offsetHeight - window.innerHeight;
-      const progress = Math.max(0, Math.min(1, scrolled / total));
+      const progress = total > 0 ? Math.max(0, Math.min(1, scrolled / total)) : 0;
       const frameIndex = Math.min(Math.floor(progress * (SAMPLED_COUNT - 1)), SAMPLED_COUNT - 1);
 
       drawFrame(frameIndex);
@@ -114,8 +137,9 @@ export default function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
 
-    // Kick off the intro once the first frames are ready.
-    if (loaded && autoPlaying) {
+    // Kick off the intro loop right away; autoStep waits internally for the
+    // first frame, so it works no matter how slowly the images load.
+    if (autoPlaying) {
       rafId = requestAnimationFrame(autoStep);
     }
 
@@ -126,7 +150,7 @@ export default function Home() {
       // Cleanup images
       imagesRef.current = [];
     };
-  }, [loaded]);
+  }, []);
 
   return (
     <div className={styles.home}>

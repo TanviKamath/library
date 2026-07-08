@@ -4,6 +4,10 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  /* Dynamic viewport height so the reader fills the visible area on mobile
+     (accounts for the browser's collapsing address bar) instead of hiding
+     the footer behind it and leaving dead space. */
+  height: 100dvh;
   background: var(--color-ivory);
   display: flex;
   flex-direction: column;

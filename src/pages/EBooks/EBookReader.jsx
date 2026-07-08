@@ -566,6 +566,30 @@ export default function EBookReader() {
     }
   }, [currentPage, totalPages]);
 
+  // ── Touch / swipe navigation (mobile) ───────────────────────────────────────
+  const touchStartRef = useRef(null);
+
+  const handleTouchStart = useCallback((e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    // Only treat as a page turn when the gesture is clearly horizontal,
+    // so it never fights vertical scrolling or a tap.
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) goNext();   // swipe left → next page
+      else goPrev();          // swipe right → previous page
+    }
+  }, [goNext, goPrev]);
+
   const goPrev = useCallback(() => {
     if (currentPage > 0) {
       setCurrentPage(p => p - 1);
@@ -859,7 +883,12 @@ export default function EBookReader() {
       </div>
 
       {/* Main Full-Height Body with Left and Right Navigation Buttons */}
-      <div className={styles['reader-body']} onClick={(e) => { if (e.target === e.currentTarget) setFocusMode(f => !f); }}>
+      <div
+        className={styles['reader-body']}
+        onClick={(e) => { if (e.target === e.currentTarget) setFocusMode(f => !f); }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Left zone — click to toggle focus mode, button navigates */}
         <div
           className={styles['side-zone']}

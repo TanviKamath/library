@@ -104,6 +104,7 @@ export default function MyBooks() {
             </button>
           </div>
         ) : (
+          <div className={styles['table-scroll']}>
           <table className={styles['book-table']}>
             <thead>
               <tr>
@@ -158,6 +159,7 @@ export default function MyBooks() {
               })}
             </tbody>
           </table>
+          </div>
         )
       )}
 
@@ -169,6 +171,7 @@ export default function MyBooks() {
             <p>Your returned books will appear here.</p>
           </div>
         ) : (
+          <div className={styles['table-scroll']}>
           <table className={styles['book-table']}>
             <thead>
               <tr>
@@ -203,6 +206,7 @@ export default function MyBooks() {
               ))}
             </tbody>
           </table>
+          </div>
         )
       )}
 
@@ -214,6 +218,7 @@ export default function MyBooks() {
             <p>When you join a waitlist for a book, it will appear here.</p>
           </div>
         ) : (
+          <div className={styles['table-scroll']}>
           <table className={styles['book-table']}>
             <thead>
               <tr>
@@ -246,6 +251,7 @@ export default function MyBooks() {
               ))}
             </tbody>
           </table>
+          </div>
         )
       )}
     </div>
