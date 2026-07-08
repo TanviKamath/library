@@ -566,6 +566,13 @@ export default function EBookReader() {
     }
   }, [currentPage, totalPages]);
 
+  const goPrev = useCallback(() => {
+    if (currentPage > 0) {
+      setCurrentPage(p => p - 1);
+      contentAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
+
   // ── Touch / swipe navigation (mobile) ───────────────────────────────────────
   const touchStartRef = useRef(null);
 
@@ -589,13 +596,6 @@ export default function EBookReader() {
       else goPrev();          // swipe right → previous page
     }
   }, [goNext, goPrev]);
-
-  const goPrev = useCallback(() => {
-    if (currentPage > 0) {
-      setCurrentPage(p => p - 1);
-      contentAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [currentPage]);
 
   // Keyboard navigation
   useEffect(() => {
