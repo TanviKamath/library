@@ -1,0 +1,55 @@
+name: CI/CD
+
+# Runs on every push and PR to master. The build + test jobs act as the gate;
+# the deploy job only fires on a direct push to master AND only if both gates pass.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  # ---- Gate 1: the React/Vite frontend must build ----
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'          # matches Dockerfile stage 1
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build            # fails the job on any build/import error
+
+  # ---- Gate 2: the Flask backend tests must pass ----
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'      # matches Dockerfile stage 2
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt
+      - name: Run pytest
+        working-directory: backend     # tests import `from app import ...`
+        run: python -m pytest tests -q
+
+  # ---- Deploy: only after BOTH gates are green, and only on push to master ----
+  deploy:
+    needs: [frontend-build, backend-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK secret is not set. Add it in repo Settings → Secrets → Actions."
+            exit 1
+          fi
+          echo "Both gates passed — triggering Render deploy..."
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+          echo "Deploy triggered. Watch progress in the Render dashboard."

@@ -30,7 +30,7 @@ def create_app(config_class=Config):
     limiter.init_app(app)
     talisman.init_app(
         app,
-        force_https=app.config['IS_PROD'],   # HTTPS only in prod; allow HTTP for local dev
+        force_https=app.config.get('IS_PROD', False),   # HTTPS only in prod; allow HTTP for local dev
         content_security_policy=None,        # default CSP blanks the React app — tighten later
     )
     cache.init_app(app)
