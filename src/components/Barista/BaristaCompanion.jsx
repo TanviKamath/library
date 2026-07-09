@@ -89,7 +89,7 @@ const NODE = {
    MAIN COMPONENT
    ======================================== */
 export default function BaristaCompanion() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, isAdmin, isStaff } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -448,7 +448,8 @@ export default function BaristaCompanion() {
 
   /* ---- render ---- */
   if (!isAuthenticated) return null;
-  if (location.pathname.startsWith('/app/admin')) return null;
+  if (isAdmin || isStaff || user?.role === 'admin' || user?.role === 'librarian') return null;
+  if (location.pathname.toLowerCase().includes('admin')) return null;
 
   return (
     <>

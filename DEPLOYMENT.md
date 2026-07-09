@@ -180,10 +180,13 @@ CMD gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120
 
 ## Phase 4 — Initialize the database
 
-The Postgres DB starts empty. Run migrations + seed once (Render **Shell** tab, or a
-one-off Job):
+`flask db upgrade` now runs **automatically on every container start** (see the
+`Dockerfile` CMD), so schema + data migrations — including the seeded Spotlight
+book quotes — apply on each deploy with no shell needed.
+
+The catalogue seed scripts below still need a one-time run on a fresh, empty DB
+(Render **Shell** tab, or a one-off Job):
 ```bash
-flask db upgrade           # create schema from backend/migrations
 python add_new_books.py    # seed catalogue
 python seed_book_quotes.py
 python backfill_page_counts.py

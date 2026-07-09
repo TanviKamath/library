@@ -13,7 +13,26 @@ def _now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+def _has_quote():
+    return Book.quote_text.isnot(None) & (Book.quote_text != '')
+
+
 def _eligible_books():
+    """Pool the spotlight rotates through.
+
+    Prefer books that have a pull-quote (so the Spotlight card always shows a
+    quote) AND a cover image. Fall back gracefully — quote-only, then
+    cover-only, then everything — so the pool is never empty even before any
+    quotes are seeded.
+    """
+    pool = Book.query.filter(
+        Book.cover_image_url.isnot(None), _has_quote()
+    ).all()
+    if pool:
+        return pool
+    pool = Book.query.filter(_has_quote()).all()
+    if pool:
+        return pool
     pool = Book.query.filter(Book.cover_image_url.isnot(None)).all()
     if pool:
         return pool
