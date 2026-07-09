@@ -140,6 +140,19 @@ def get_current_spotlight():
         setting.set_by_id = None
         db.session.commit()
 
+    # Self-heal: if an auto-picked spotlight book has no pull-quote (e.g. one
+    # chosen before quotes were seeded), re-pick now from the quote-having pool
+    # instead of waiting out the 24h rotation. Admin overrides are respected as-is.
+    if not setting.is_admin_override and not (book.quote_text and book.quote_text.strip()):
+        replacement = _pick_event_book(exclude_id=book.id) or _pick_random_book(exclude_id=book.id)
+        if replacement and (replacement.quote_text and replacement.quote_text.strip()):
+            book = replacement
+            setting.book_id = book.id
+            setting.set_at = _now()
+            setting.is_admin_override = False
+            setting.set_by_id = None
+            db.session.commit()
+
     expires_at = setting.set_at + timedelta(hours=ROTATION_HOURS)
     return book, {
         **setting.to_dict(),

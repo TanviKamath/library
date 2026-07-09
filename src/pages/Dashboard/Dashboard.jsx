@@ -507,13 +507,16 @@ function SpotlightEditModal({ isOpen, onClose, currentBookId, onSaved }) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
+  const [quotedOnly, setQuotedOnly] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     async function loadBooks() {
       setLoading(true);
       try {
-        const data = await api.get('/books?limit=100');
+        // Load the whole catalogue (not just the first 100) so every book —
+        // and every quoted book — is reachable in the picker.
+        const data = await api.get('/books?limit=1000');
         setBooks(data?.books || []);
       } catch {
         setBooks([]);
@@ -524,14 +527,22 @@ function SpotlightEditModal({ isOpen, onClose, currentBookId, onSaved }) {
     loadBooks();
   }, [isOpen]);
 
-  const filteredBooks = books.filter(book => {
-    const term = search.trim().toLowerCase();
-    if (!term) return true;
-    return (
-      book.title?.toLowerCase().includes(term) ||
-      book.author_name?.toLowerCase().includes(term)
-    );
-  });
+  const hasQuote = (book) => Boolean(book.quote_text && book.quote_text.trim());
+  const quotedCount = books.filter(hasQuote).length;
+
+  const filteredBooks = books
+    .filter(book => {
+      if (quotedOnly && !hasQuote(book)) return false;
+      const term = search.trim().toLowerCase();
+      if (!term) return true;
+      return (
+        book.title?.toLowerCase().includes(term) ||
+        book.author_name?.toLowerCase().includes(term)
+      );
+    })
+    // Surface books that have a quote first — those are the ones that show a
+    // pull-quote on the Spotlight card.
+    .sort((a, b) => (hasQuote(b) ? 1 : 0) - (hasQuote(a) ? 1 : 0));
 
   async function handleSelect(bookId) {
     setSavingId(bookId);
@@ -557,6 +568,14 @@ function SpotlightEditModal({ isOpen, onClose, currentBookId, onSaved }) {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+      <label className={styles['spotlight-filter']}>
+        <input
+          type="checkbox"
+          checked={quotedOnly}
+          onChange={(e) => setQuotedOnly(e.target.checked)}
+        />
+        Only books with a quote ({quotedCount})
+      </label>
       {loading ? (
         <p className={styles['spotlight-edit-empty']}>Loading books…</p>
       ) : filteredBooks.length === 0 ? (
@@ -571,7 +590,12 @@ function SpotlightEditModal({ isOpen, onClose, currentBookId, onSaved }) {
               disabled={savingId === book.id}
               onClick={() => handleSelect(book.id)}
             >
-              <span className={styles['spotlight-book-title']}>{book.title}</span>
+              <span className={styles['spotlight-book-title']}>
+                {book.title}
+                {hasQuote(book) && (
+                  <span className={styles['spotlight-book-quote-badge']} title={book.quote_text}>❝ quote</span>
+                )}
+              </span>
               <span className={styles['spotlight-book-author']}>{book.author_name || 'Unknown Author'}</span>
             </button>
           ))}

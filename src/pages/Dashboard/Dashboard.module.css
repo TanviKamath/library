@@ -558,12 +558,38 @@
   font-size: var(--fs-sm);
 }
 
+.spotlight-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--color-charcoal-light);
+  cursor: pointer;
+}
+
+.spotlight-filter input {
+  cursor: pointer;
+}
+
 .spotlight-book-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   max-height: 360px;
   overflow-y: auto;
+}
+
+.spotlight-book-quote-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-terracotta-bg, #fde8e8);
+  color: var(--color-terracotta);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .spotlight-book-option {
