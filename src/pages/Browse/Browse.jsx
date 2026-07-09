@@ -304,7 +304,7 @@ export default function Browse() {
           style={isPhoneLayout && displayBooks.length === 1 ? { gridTemplateColumns: '1fr', justifyItems: 'center' } : undefined}
         >
           {displayBooks.map(book => (
-            <div key={book.id} style={isPhoneLayout && displayBooks.length === 1 ? { width: '100%', maxWidth: '280px' } : { width: '100%' }}>
+            <div key={book.id} style={isPhoneLayout && displayBooks.length === 1 ? { width: '100%', maxWidth: '280px', height: '100%', display: 'flex', flexDirection: 'column' } : { width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
               <BookCard book={book} onLikeToggle={handleLikeToggle} />
             </div>
           ))}

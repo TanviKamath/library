@@ -522,7 +522,10 @@ class App {
   onTouchMove(e) {
     if (!this.isDown) return;
     const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const distance = (this.start - x) * (this.scrollSpeed * 0.025);
+    // Touch drag advances more cards per swipe than a mouse wheel step — a
+    // single finger swipe on a narrow phone should move several cards, not 1-2.
+    const dragFactor = e.touches ? 0.06 : 0.025;
+    const distance = (this.start - x) * (this.scrollSpeed * dragFactor);
     this.scroll.target = this.scroll.position + distance;
   }
   onTouchUp(e) {

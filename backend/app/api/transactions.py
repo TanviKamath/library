@@ -12,6 +12,28 @@ from app.utils.decorators import role_required
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import joinedload
 from app.api.settings import get_setting
+import threading
+
+
+def _send_email_async(msg):
+    """Send an email in a background thread.
+
+    Flask-Mail's ``send`` blocks on the SMTP round-trip (~1-2s), which made
+    issuing/returning a book feel slow and — combined with a double click —
+    surfaced a spurious "already issued" error on the duplicate request. Sending
+    off-thread lets the endpoint respond immediately.
+    """
+    app = current_app._get_current_object()
+
+    def _run():
+        with app.app_context():
+            try:
+                mail.send(msg)
+            except Exception as e:
+                app.logger.warning(f"Async email send failed: {e}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
 
 def _fine_rate():
     try:
@@ -148,7 +170,7 @@ def issue_book():
             sender=sender_email
         )
         msg.body = f"Hello {user.full_name or user.username},\n\nYou have successfully borrowed '{book.title}' from Bookworm Library.\n\nYour return due date is: {due_str}.\n\nPlease ensure it is returned on or before this date to avoid overdue fines.\n\nHappy reading!\nBookworm Library Team"
-        mail.send(msg)
+        _send_email_async(msg)
     except Exception as e:
         print(f"Failed to send checkout email: {e}")
 
@@ -202,7 +224,7 @@ def return_book():
                     sender=current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@bookworm.com')
                 )
                 msg.body = f"Hello {user.full_name},\n\nGood news! A copy of '{book.title}' has just been returned. It is now waiting for you at the front desk.\n\nPlease pick it up within 48 hours, or your reservation will expire.\n\nHappy reading!\nBookworm Library"
-                mail.send(msg)
+                _send_email_async(msg)
             except Exception as e:
                 # Log error but don't fail the return
                 print(f"Failed to send waitlist email: {e}")

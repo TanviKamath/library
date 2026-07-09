@@ -10,3 +10,10 @@
   transform: scale(1);
   transform-origin: center;
 }
+
+/* Let touch drags spin/stretch the card instead of scrolling the page.
+   Without this, mobile browsers treat the swipe as a page-scroll gesture and
+   cancel the pointer drag, so the lanyard looks frozen on phones. */
+.lanyard-wrapper canvas {
+  touch-action: none;
+}

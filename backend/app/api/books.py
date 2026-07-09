@@ -15,6 +15,7 @@ from app.schemas import BookSchema
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from app.models.like import UserBookLike
 from sqlalchemy.orm import joinedload
+from app.utils.helpers import enrich_books_data, enrich_book_dict
 
 @bp.route('/books', methods=['GET'])
 def get_books():
@@ -63,15 +64,7 @@ def get_books():
     except Exception:
         pass
 
-    user_likes = []
-    if current_user_id:
-        user_likes = [like.book_id for like in UserBookLike.query.filter_by(user_id=current_user_id).all()]
-
-    books_data = []
-    for b in paginated.items:
-        b_dict = b.to_dict()
-        b_dict['is_liked'] = b.id in user_likes
-        books_data.append(b_dict)
+    books_data = enrich_books_data([b.to_dict() for b in paginated.items], current_user_id)
 
     return jsonify({
         'books': books_data,
@@ -97,11 +90,7 @@ def get_book(id):
     except Exception:
         pass
 
-    b_dict['is_liked'] = False
-    if current_user_id:
-        liked = UserBookLike.query.filter_by(user_id=current_user_id, book_id=id).first()
-        if liked:
-            b_dict['is_liked'] = True
+    b_dict = enrich_book_dict(b_dict, current_user_id)
 
     return jsonify(b_dict), 200
 

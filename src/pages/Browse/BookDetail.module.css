@@ -267,6 +267,12 @@
   gap: var(--space-4);
 }
 
+.similar-grid > * {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 /* ── Loading ── */
 .loading {
   text-align: center;

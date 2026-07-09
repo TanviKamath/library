@@ -353,111 +353,112 @@ export default function DomeGallery({
     { target: mainRef, eventOptions: { passive: true } }
   );
 
+  const closeEnlarge = useCallback(() => {
+    if (performance.now() - openStartedAtRef.current < 250) return;
+    setActiveBook(null);
+    rootRef.current?.removeAttribute('data-enlarging');
+
+    // Delay the zoom-out transition slightly so the book closes in 3D first
+    setTimeout(() => {
+      const el = focusedElRef.current;
+      if (!el) return;
+      const parent = el.parentElement;
+      const overlay = viewerRef.current?.querySelector('.enlarge');
+      if (!overlay) return;
+      const refDiv = parent.querySelector('.item__image--reference');
+      const originalPos = originalTilePositionRef.current;
+      if (!originalPos) {
+        overlay.remove();
+        if (refDiv) refDiv.remove();
+        parent.style.setProperty('--rot-y-delta', '0deg');
+        parent.style.setProperty('--rot-x-delta', '0deg');
+        el.style.visibility = '';
+        el.style.zIndex = 0;
+        focusedElRef.current = null;
+        openingRef.current = false;
+        unlockScroll();
+        return;
+      }
+      const currentRect = overlay.getBoundingClientRect();
+      const rootRect = rootRef.current.getBoundingClientRect();
+      const originalPosRelativeToRoot = {
+        left: originalPos.left - rootRect.left,
+        top: originalPos.top - rootRect.top,
+        width: originalPos.width,
+        height: originalPos.height
+      };
+      const overlayRelativeToRoot = {
+        left: currentRect.left - rootRect.left,
+        top: currentRect.top - rootRect.top,
+        width: currentRect.width,
+        height: currentRect.height
+      };
+      const animatingOverlay = document.createElement('div');
+      animatingOverlay.className = 'enlarge-closing';
+      animatingOverlay.style.cssText = `position:absolute;left:${overlayRelativeToRoot.left}px;top:${overlayRelativeToRoot.top}px;width:${overlayRelativeToRoot.width}px;height:${overlayRelativeToRoot.height}px;z-index:9999;border-radius: var(--enlarge-radius, 32px);overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:all ${enlargeTransitionMs}ms ease-out;pointer-events:none;margin:0;transform:none;`;
+      
+      const originalImg = overlay.querySelector('.book-cover-front img') || overlay.querySelector('img');
+      if (originalImg) {
+        const img = originalImg.cloneNode();
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        animatingOverlay.appendChild(img);
+      }
+      overlay.remove();
+      rootRef.current.appendChild(animatingOverlay);
+      void animatingOverlay.getBoundingClientRect();
+      requestAnimationFrame(() => {
+        animatingOverlay.style.left = originalPosRelativeToRoot.left + 'px';
+        animatingOverlay.style.top = originalPosRelativeToRoot.top + 'px';
+        animatingOverlay.style.width = originalPosRelativeToRoot.width + 'px';
+        animatingOverlay.style.height = originalPosRelativeToRoot.height + 'px';
+        animatingOverlay.style.opacity = '0';
+      });
+      const cleanup = () => {
+        animatingOverlay.remove();
+        originalTilePositionRef.current = null;
+        if (refDiv) refDiv.remove();
+        parent.style.transition = 'none';
+        el.style.transition = 'none';
+        parent.style.setProperty('--rot-y-delta', '0deg');
+        parent.style.setProperty('--rot-x-delta', '0deg');
+        requestAnimationFrame(() => {
+          el.style.visibility = '';
+          el.style.opacity = '0';
+          el.style.zIndex = 0;
+          focusedElRef.current = null;
+          requestAnimationFrame(() => {
+            parent.style.transition = '';
+            el.style.transition = 'opacity 300ms ease-out';
+            requestAnimationFrame(() => {
+              el.style.opacity = '1';
+              setTimeout(() => {
+                el.style.transition = '';
+                el.style.opacity = '';
+                openingRef.current = false;
+                if (!draggingRef.current && rootRef.current?.getAttribute('data-enlarging') !== 'true')
+                  document.body.classList.remove('dg-scroll-lock');
+              }, 300);
+            });
+          });
+        });
+      };
+      animatingOverlay.addEventListener('transitionend', cleanup, { once: true });
+    }, 150);
+  }, [enlargeTransitionMs, unlockScroll]);
+
   useEffect(() => {
     const scrim = scrimRef.current;
     if (!scrim) return;
-    const close = () => {
-      if (performance.now() - openStartedAtRef.current < 250) return;
-      setActiveBook(null);
-      rootRef.current?.removeAttribute('data-enlarging');
-
-      // Delay the zoom-out transition slightly so the book closes in 3D first
-      setTimeout(() => {
-        const el = focusedElRef.current;
-        if (!el) return;
-        const parent = el.parentElement;
-        const overlay = viewerRef.current?.querySelector('.enlarge');
-        if (!overlay) return;
-        const refDiv = parent.querySelector('.item__image--reference');
-        const originalPos = originalTilePositionRef.current;
-        if (!originalPos) {
-          overlay.remove();
-          if (refDiv) refDiv.remove();
-          parent.style.setProperty('--rot-y-delta', '0deg');
-          parent.style.setProperty('--rot-x-delta', '0deg');
-          el.style.visibility = '';
-          el.style.zIndex = 0;
-          focusedElRef.current = null;
-          openingRef.current = false;
-          unlockScroll();
-          return;
-        }
-        const currentRect = overlay.getBoundingClientRect();
-        const rootRect = rootRef.current.getBoundingClientRect();
-        const originalPosRelativeToRoot = {
-          left: originalPos.left - rootRect.left,
-          top: originalPos.top - rootRect.top,
-          width: originalPos.width,
-          height: originalPos.height
-        };
-        const overlayRelativeToRoot = {
-          left: currentRect.left - rootRect.left,
-          top: currentRect.top - rootRect.top,
-          width: currentRect.width,
-          height: currentRect.height
-        };
-        const animatingOverlay = document.createElement('div');
-        animatingOverlay.className = 'enlarge-closing';
-        animatingOverlay.style.cssText = `position:absolute;left:${overlayRelativeToRoot.left}px;top:${overlayRelativeToRoot.top}px;width:${overlayRelativeToRoot.width}px;height:${overlayRelativeToRoot.height}px;z-index:9999;border-radius: var(--enlarge-radius, 32px);overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:all ${enlargeTransitionMs}ms ease-out;pointer-events:none;margin:0;transform:none;`;
-        
-        const originalImg = overlay.querySelector('.book-cover-front img') || overlay.querySelector('img');
-        if (originalImg) {
-          const img = originalImg.cloneNode();
-          img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-          animatingOverlay.appendChild(img);
-        }
-        overlay.remove();
-        rootRef.current.appendChild(animatingOverlay);
-        void animatingOverlay.getBoundingClientRect();
-        requestAnimationFrame(() => {
-          animatingOverlay.style.left = originalPosRelativeToRoot.left + 'px';
-          animatingOverlay.style.top = originalPosRelativeToRoot.top + 'px';
-          animatingOverlay.style.width = originalPosRelativeToRoot.width + 'px';
-          animatingOverlay.style.height = originalPosRelativeToRoot.height + 'px';
-          animatingOverlay.style.opacity = '0';
-        });
-        const cleanup = () => {
-          animatingOverlay.remove();
-          originalTilePositionRef.current = null;
-          if (refDiv) refDiv.remove();
-          parent.style.transition = 'none';
-          el.style.transition = 'none';
-          parent.style.setProperty('--rot-y-delta', '0deg');
-          parent.style.setProperty('--rot-x-delta', '0deg');
-          requestAnimationFrame(() => {
-            el.style.visibility = '';
-            el.style.opacity = '0';
-            el.style.zIndex = 0;
-            focusedElRef.current = null;
-            requestAnimationFrame(() => {
-              parent.style.transition = '';
-              el.style.transition = 'opacity 300ms ease-out';
-              requestAnimationFrame(() => {
-                el.style.opacity = '1';
-                setTimeout(() => {
-                  el.style.transition = '';
-                  el.style.opacity = '';
-                  openingRef.current = false;
-                  if (!draggingRef.current && rootRef.current?.getAttribute('data-enlarging') !== 'true')
-                    document.body.classList.remove('dg-scroll-lock');
-                }, 300);
-              });
-            });
-          });
-        };
-        animatingOverlay.addEventListener('transitionend', cleanup, { once: true });
-      }, 150);
-    };
-    scrim.addEventListener('click', close);
+    scrim.addEventListener('click', closeEnlarge);
     const onKey = e => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') closeEnlarge();
     };
     window.addEventListener('keydown', onKey);
     return () => {
-      scrim.removeEventListener('click', close);
+      scrim.removeEventListener('click', closeEnlarge);
       window.removeEventListener('keydown', onKey);
     };
-  }, [enlargeTransitionMs, unlockScroll]);
+  }, [closeEnlarge]);
 
   const openItemFromElement = useCallback(
     (el, item) => {
@@ -555,6 +556,12 @@ export default function DomeGallery({
         : '';
 
       pageStack.innerHTML = `
+        <button class="book-close-btn" aria-label="Close book" title="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
         <div class="book-page-content">
           <h4 class="book-page-title">${title}</h4>
           ${author ? `<p class="book-page-author">by ${author}</p>` : ''}
@@ -587,6 +594,14 @@ export default function DomeGallery({
       overlay.appendChild(bookContainer);
       viewerRef.current.appendChild(overlay);
 
+      const closeBtn = pageStack.querySelector('.book-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          closeEnlarge();
+        });
+      }
+
       const tx0 = tileR.left - centeredLeft;
       const ty0 = tileR.top - centeredTop;
       const sx0 = tileR.width / 350;
@@ -604,7 +619,7 @@ export default function DomeGallery({
         rootRef.current?.setAttribute('data-enlarging', 'true');
       }, 16);
     },
-    [enlargeTransitionMs, lockScroll, segments]
+    [closeEnlarge, enlargeTransitionMs, lockScroll, segments]
   );
 
   const onTileClick = useCallback(

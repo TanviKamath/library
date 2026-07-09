@@ -61,6 +61,7 @@ export default function BookDetail() {
     setActionMsg(null);
     try {
       await api.post('/reservations/join', { book_id: Number(id) });
+      setBook(prev => ({ ...prev, is_reserved: true }));
       setActionMsg({ type: 'success', text: book.available_copies > 0 ? 'Book reserved successfully!' : 'You\'ve been added to the waitlist!' });
     } catch (err) {
       setActionMsg({ type: 'error', text: err.message });
@@ -196,14 +197,40 @@ export default function BookDetail() {
           )}
 
           <div className={styles['detail-actions']}>
-            {isAuthenticated && !isStaff && actionMsg?.type !== 'success' && (
-              <button
-                className="btn btn-secondary"
-                onClick={handleReserve}
-                disabled={actionLoading}
-              >
-                {actionLoading ? 'Processing…' : (book.available_copies > 0 ? 'Reserve book' : 'Join waitlist')}
-              </button>
+            {isAuthenticated && !isStaff && (
+              (book.is_reserved || book.is_issued || actionMsg?.type === 'success') ? (
+                <div
+                  style={{
+                    background: '#1f5138',
+                    color: '#ffffff',
+                    border: '1px solid #143725',
+                    cursor: 'default',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontWeight: 600,
+                    borderRadius: 'var(--radius-pill, 9999px)',
+                    padding: '12px 24px',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 3px 8px rgba(31, 81, 56, 0.25)',
+                    userSelect: 'none'
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {book.is_issued ? 'Book Already Issued' : 'Book Already Reserved'}
+                </div>
+              ) : (
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleReserve}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? 'Processing…' : (book.available_copies > 0 ? 'Reserve book' : 'Join waitlist')}
+                </button>
+              )
             )}
             {book.gutenberg_id && (
               <button

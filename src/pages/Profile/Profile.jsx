@@ -27,13 +27,18 @@ export default function Profile() {
 
   // Stats
   const [borrows, setBorrows] = useState([]);
+  const [reservedCount, setReservedCount] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
       try {
-        const txns = await api.get('/transactions/my');
+        const [txns, reservations] = await Promise.all([
+          api.get('/transactions/my'),
+          api.get('/reservations/my').catch(() => []),
+        ]);
         setBorrows(Array.isArray(txns) ? txns : []);
+        setReservedCount(Array.isArray(reservations) ? reservations.length : 0);
       } catch (err) {
         console.error('Failed to load user stats:', err);
       } finally {
@@ -112,6 +117,10 @@ export default function Profile() {
             <div className={styles['stat-label']}>Overdue</div>
             <div className={styles['stat-value']}>{overdueCount}</div>
             {overdueCount > 0 && <OverdueStamp />}
+          </div>
+          <div className={styles['stat-card']}>
+            <div className={styles['stat-label']}>Reserved</div>
+            <div className={styles['stat-value']}>{reservedCount}</div>
           </div>
           <div className={styles['stat-card']}>
             <div className={styles['stat-label']}>Total Borrowed</div>

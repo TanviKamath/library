@@ -153,6 +153,12 @@
   margin-bottom: var(--space-8);
 }
 
+.book-grid > * {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 /* Graceful fallbacks for narrower screens */
 @media (max-width: 1400px) {
   .book-grid { grid-template-columns: repeat(5, 1fr); }

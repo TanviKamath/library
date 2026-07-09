@@ -7,6 +7,8 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  flex: 1;
 }
 
 .book-card:hover {
@@ -95,12 +97,17 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: var(--lh-snug);
+  min-height: calc(var(--fs-base) * var(--lh-snug) * 2);
 }
 
 .book-author {
   font-size: var(--fs-sm);
   color: var(--color-charcoal-light);
   margin-bottom: var(--space-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .book-meta {

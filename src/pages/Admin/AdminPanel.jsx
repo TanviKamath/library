@@ -35,6 +35,121 @@ function downloadTemplate(filename, headers, sampleRow) {
   downloadCSV(filename, headers, [sampleRow]);
 }
 
+function CustomBarDropdown({ value, onChange, options = [], showFunnel = true, placeholder = "Select...", fullWidth = false }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const safeOptions = Array.isArray(options) ? options : [];
+  const selectedOption = safeOptions.find(o => String(o.value) === String(value)) || (safeOptions.length > 0 && !placeholder ? safeOptions[0] : null);
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative', userSelect: 'none', width: fullWidth ? '100%' : 'auto' }}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          background: isOpen ? 'var(--color-parchment-bg, #fdfbfa)' : '#ffffff',
+          border: '1px solid var(--color-parchment-border, #e5ded8)',
+          borderRadius: 'var(--radius-md, 10px)',
+          padding: fullWidth ? '8px 14px' : '6px 14px',
+          boxShadow: isOpen ? '0 0 0 3px rgba(200, 109, 81, 0.15)' : '0 1px 2px rgba(0,0,0,0.03)',
+          cursor: 'pointer',
+          minHeight: fullWidth ? '44px' : '38px',
+          transition: 'all 0.15s ease'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+          {showFunnel && (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-terracotta)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" title="Sort / Filter Order" style={{ flexShrink: 0 }}>
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+          )}
+          <span style={{ fontSize: '13.5px', fontWeight: selectedOption ? 600 : 400, color: selectedOption ? 'var(--color-espresso, #2d2420)' : 'var(--color-charcoal-light, #8c827a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--color-charcoal-light, #8c827a)', flexShrink: 0, marginLeft: '4px' }}>
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: fullWidth ? 0 : 'auto',
+            right: 0,
+            marginTop: '6px',
+            background: '#ffffff',
+            border: '1px solid var(--color-divider, #e5ded8)',
+            borderRadius: 'var(--radius-md, 12px)',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1)',
+            zIndex: 1100,
+            overflow: 'hidden',
+            minWidth: fullWidth ? '100%' : '220px',
+            maxHeight: '300px',
+            display: 'flex',
+            flexDirection: 'column',
+            animation: 'fadeIn 0.15s ease'
+          }}
+        >
+          <div style={{ overflowY: 'auto', padding: '4px' }}>
+            {safeOptions.map(o => {
+              const isSelected = String(o.value) === String(value);
+              return (
+                <div
+                  key={o.value}
+                  onClick={() => {
+                    onChange(o.value);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: isSelected ? 'var(--color-terracotta-bg, #fde8e8)' : 'transparent',
+                    color: isSelected ? 'var(--color-terracotta, #c86d51)' : 'var(--color-espresso, #2d2420)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    transition: 'background 0.15s ease',
+                    fontWeight: isSelected ? 600 : 500,
+                    fontSize: '13.5px',
+                    borderBottom: '1px solid rgba(0,0,0,0.03)'
+                  }}
+                  onMouseEnter={e => {
+                    if (!isSelected) e.currentTarget.style.background = '#f5f0ec';
+                  }}
+                  onMouseLeave={e => {
+                    if (!isSelected) e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <span>{o.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, search, onSearchChange, searchPlaceholder = "Search...", sort, onSortChange, sortOptions }) {
   return (
     <>
@@ -45,7 +160,7 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, se
           </span>
 
           {onSearchChange && (
-            <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '1px solid var(--color-parchment-border)', borderRadius: 'var(--radius-md)', padding: '5px 12px', minWidth: '220px', flex: '1 1 200px', maxWidth: '300px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '1px solid var(--color-parchment-border)', borderRadius: 'var(--radius-md)', padding: '6px 14px', minHeight: '38px', minWidth: '220px', flex: '1 1 200px', maxWidth: '300px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
               <svg style={{ marginRight: '8px', flexShrink: 0 }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -70,20 +185,12 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, se
           )}
 
           {onSortChange && sortOptions && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid var(--color-parchment-border)', borderRadius: 'var(--radius-md)', padding: '5px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-terracotta)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" title="Sort / Filter Order">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-              </svg>
-              <select
-                value={sort}
-                onChange={e => onSortChange(e.target.value)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 500, color: 'var(--color-espresso)', cursor: 'pointer', paddingRight: '22px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'10\' height=\'6\' viewBox=\'0 0 10 6\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1L5 5L9 1\' stroke=\'%235c4f4a\' stroke-width=\'1.6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center' }}
-              >
-                {sortOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
+            <CustomBarDropdown
+              value={sort}
+              onChange={onSortChange}
+              options={sortOptions}
+              showFunnel={true}
+            />
           )}
         </div>
 
@@ -161,6 +268,10 @@ function TransactionsTab() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('newest');
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [issuing, setIssuing] = useState(false);
+  // Ref gate updates synchronously, so it blocks a same-tick double-fire
+  // (e.g. touchend + click on mobile) that the async `issuing` state would miss.
+  const issuingRef = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -183,6 +294,12 @@ function TransactionsTab() {
 
   async function handleIssue(e) {
     e.preventDefault();
+    // Guard against a double submit: the issue request is slow enough that a
+    // second click lands while the first is still in flight and wrongly reports
+    // "already issued". The ref blocks even a same-tick re-fire.
+    if (issuingRef.current) return;
+    issuingRef.current = true;
+    setIssuing(true);
     setMsg(null);
     try {
       await api.post('/transactions/issue', { book_id: Number(issueBookId), user_id: Number(issueUserId) });
@@ -190,7 +307,12 @@ function TransactionsTab() {
       setIssueBookId(''); setIssueUserId('');
       setShowIssueModal(false);
       loadData();
-    } catch (err) { setMsg({ type: 'error', text: err.message }); }
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message });
+    } finally {
+      issuingRef.current = false;
+      setIssuing(false);
+    }
   }
 
   async function handleReturn(txnId) {
@@ -266,15 +388,21 @@ function TransactionsTab() {
         (t.user_name && t.user_name.toLowerCase().includes(q))
       );
     }
+    if (sort === 'overdue') {
+      const now = new Date();
+      filtered = filtered.filter(t => t.status === 'overdue' || getPendingFine(t) > 0 || new Date(t.due_date) < now);
+    }
     return [...filtered].sort((a, b) => {
       if (sort === 'az_book') return (a.book_title || '').localeCompare(b.book_title || '');
       if (sort === 'za_book') return (b.book_title || '').localeCompare(a.book_title || '');
       if (sort === 'az_member') return (a.user_name || '').localeCompare(b.user_name || '');
       if (sort === 'za_member') return (b.user_name || '').localeCompare(a.user_name || '');
       if (sort === 'oldest') return new Date(a.issued_at || 0) - new Date(b.issued_at || 0);
+      if (sort === 'overdue') return new Date(a.due_date || 0) - new Date(b.due_date || 0);
       return new Date(b.issued_at || 0) - new Date(a.issued_at || 0); // newest
     });
   }
+
 
   const renewalRequests = filterAndSort(transactions.filter(t => t.status === 'renewal_requested'));
   const active = filterAndSort(transactions.filter(t => t.status === 'active' || t.status === 'overdue' || t.status === 'renewal_requested'));
@@ -305,10 +433,11 @@ function TransactionsTab() {
         sortOptions={[
           { value: 'newest', label: 'Newest First' },
           { value: 'oldest', label: 'Oldest First' },
-          { value: 'az_book', label: 'Book Title (A-Z)' },
-          { value: 'za_book', label: 'Book Title (Z-A)' },
-          { value: 'az_member', label: 'Member Name (A-Z)' },
-          { value: 'za_member', label: 'Member Name (Z-A)' },
+          { value: 'overdue', label: 'Overdue Only' },
+          { value: 'az_book', label: 'Book Title (A–Z)' },
+          { value: 'za_book', label: 'Book Title (Z–A)' },
+          { value: 'az_member', label: 'Member Name (A–Z)' },
+          { value: 'za_member', label: 'Member Name (Z–A)' },
         ]}
       >
         <button className="btn btn-primary btn-sm" onClick={() => setShowIssueModal(true)}>+ Issue book</button>
@@ -339,7 +468,7 @@ function TransactionsTab() {
       )}
 
       {/* Active Transactions Table */}
-      <h3 style={{ marginBottom: 'var(--space-4)' }}>Active Transactions ({active.length})</h3>
+      <h3 style={{ marginBottom: 'var(--space-4)' }}>{sort === 'overdue' ? 'Overdue Transactions' : 'Active Transactions'} ({active.length})</h3>
       <AdminTable
           data={active}
           empty="No active transactions."
@@ -367,7 +496,7 @@ function TransactionsTab() {
             { key: 'actions', header: 'Actions', render: t => {
               const fine = getPendingFine(t);
               return fine > 0
-                ? <button className={styles['action-btn']} onClick={() => handleCollectAndReturn(t.id, fine)} style={{ background: '#d97706', borderColor: '#b45309', color: '#ffffff', minWidth: '130px' }}>Collect & Return</button>
+                ? <button className={styles['action-btn']} onClick={() => handleCollectAndReturn(t.id, fine)} style={{ background: '#d97706', borderColor: '#b45309', color: '#ffffff', minWidth: '130px' }}>Collect ₹ & Return</button>
                 : <button className={styles['action-btn']} onClick={() => handleReturn(t.id)}>Return</button>;
             }},
           ]}
@@ -382,6 +511,7 @@ function TransactionsTab() {
           issueUserId={issueUserId}
           setIssueUserId={setIssueUserId}
           onSubmit={handleIssue}
+          submitting={issuing}
           onClose={() => setShowIssueModal(false)}
         />
       )}
@@ -616,10 +746,14 @@ function BookFormModal({ book, categories, onSave, onClose }) {
           </div>
           <div className="form-group">
             <label htmlFor="book-category" className="form-label">Category</label>
-            <select id="book-category" className="input" value={categoryId} onChange={e => setCategoryId(e.target.value)} required>
-              <option value="">Select…</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <CustomBarDropdown
+              value={categoryId}
+              onChange={setCategoryId}
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+              showFunnel={false}
+              placeholder="Select category…"
+              fullWidth={true}
+            />
           </div>
           <div className="form-group">
             <label htmlFor="book-copies" className="form-label">Total Copies</label>
@@ -924,15 +1058,21 @@ function MemberFormModal({ onSave, onClose }) {
                 minLength={4}
               />
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group" style={{ flex: '1 1 140px' }}>
               <label htmlFor="mem-role" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
                 Role{req}
               </label>
-              <select id="mem-role" className="input" value={role} onChange={e => setRole(e.target.value)} required>
-                <option value="member">Member</option>
-                <option value="librarian">Librarian</option>
-                <option value="admin">Admin</option>
-              </select>
+              <CustomBarDropdown
+                value={role}
+                onChange={setRole}
+                options={[
+                  { value: 'member', label: 'Member' },
+                  { value: 'librarian', label: 'Librarian' },
+                  { value: 'admin', label: 'Admin' }
+                ]}
+                showFunnel={false}
+                fullWidth={true}
+              />
             </div>
           </div>
 
@@ -1125,11 +1265,12 @@ function SearchableDropdown({ label, options, value, onChange, placeholder, rend
   );
 }
 
-function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUserId, setIssueUserId, onSubmit, onClose }) {
+function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUserId, setIssueUserId, onSubmit, submitting = false, onClose }) {
   const [error, setError] = useState(null);
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return;
     if (!issueBookId) {
       setError('Please select a book to issue.');
       return;
@@ -1210,8 +1351,8 @@ function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUser
           />
 
           <div className={styles['modal-actions']} style={{ marginTop: 'var(--space-2)' }}>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Issue book</button>
+            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={submitting}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Issuing…' : 'Issue book'}</button>
           </div>
         </form>
       </div>
@@ -1413,6 +1554,8 @@ function ReservationsTab() {
   const [msg, setMsg] = useState(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('newest');
+  const [issuingId, setIssuingId] = useState(null);
+  const issuingRef = useRef(false);
 
   async function load() {
     setLoading(true);
@@ -1428,6 +1571,12 @@ function ReservationsTab() {
   }, []);
 
   async function handleIssueBook(res) {
+    // Guard against a double click while the (slow) issue request is in flight,
+    // which would otherwise report "already issued" for the duplicate. The ref
+    // blocks even a same-tick re-fire that the async state would miss.
+    if (issuingRef.current) return;
+    issuingRef.current = true;
+    setIssuingId(res.id);
     setMsg(null);
     try {
       await api.post('/transactions/issue', {
@@ -1438,6 +1587,9 @@ function ReservationsTab() {
       load();
     } catch (err) {
       setMsg({ type: 'error', text: err.message || 'Failed to issue book.' });
+    } finally {
+      issuingRef.current = false;
+      setIssuingId(null);
     }
   }
 
@@ -1541,7 +1693,7 @@ function ReservationsTab() {
             )},
             { key: 'ready_at', header: 'Ready Since', render: r => r.ready_at ? formatDate(r.ready_at) : '—' },
             { key: 'actions', header: 'Actions', render: r => r.status === 'ready'
-              ? <button className="btn btn-primary btn-sm" onClick={() => handleIssueBook(r)}>Issue book</button>
+              ? <button className="btn btn-primary btn-sm" onClick={() => handleIssueBook(r)} disabled={issuingId !== null}>{issuingId === r.id ? 'Issuing…' : 'Issue book'}</button>
               : <span style={{ color: 'var(--color-charcoal-light)', fontStyle: 'italic', fontSize: '0.85rem' }}>Waiting</span>
             },
           ]}

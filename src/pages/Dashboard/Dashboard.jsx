@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import { BookCard } from '../../components/BookCard';
+import { LikeButton } from '../../components/LikeButton';
 import Lanyard from '../../components/Lanyard/Lanyard';
 import { Modal } from '../../components/Modal';
 import OverdueStamp from '../../components/OverdueStamp/OverdueStamp';
@@ -23,12 +24,6 @@ function daysUntil(iso) {
 }
 
 
-const heartOutline = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
 export default function Dashboard() {
   const { user, isStaff } = useAuth();
 
@@ -48,7 +43,6 @@ export default function Dashboard() {
    ═══════════════════════════════════════════ */
 function MemberDashboard() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [borrows, setBorrows] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,20 +92,11 @@ function MemberDashboard() {
     return () => window.removeEventListener('favourites-updated', refreshRecs);
   }, []);
 
-  async function handleRecLike(e, book) {
-    e.stopPropagation();
-    if (!isAuthenticated) return;
-    try {
-      if (book.is_liked) {
-        await api.delete(`/books/${book.id}/like`);
-      } else {
-        await api.post(`/books/${book.id}/like`);
-      }
-      setRecommendations(prev =>
-        prev.map(b => (b.id === book.id ? { ...b, is_liked: !b.is_liked } : b))
-      );
-      window.dispatchEvent(new Event('favourites-updated'));
-    } catch {}
+  function handleRecLike(bookId, liked) {
+    setRecommendations(prev =>
+      prev.map(b => (b.id === bookId ? { ...b, is_liked: liked } : b))
+    );
+    window.dispatchEvent(new Event('favourites-updated'));
   }
 
   const active = borrows.filter(t => t.status === 'active' || t.status === 'overdue');
@@ -216,15 +201,7 @@ function MemberDashboard() {
                   >
                     {book.title}
                   </div>
-                  {isAuthenticated && (
-                    <button
-                      className={`${styles['rec-like-btn']} ${book.is_liked ? styles.liked : ''}`}
-                      onClick={(e) => handleRecLike(e, book)}
-                      aria-label={book.is_liked ? 'Unlike book' : 'Like book'}
-                    >
-                      {heartOutline}
-                    </button>
-                  )}
+                  <LikeButton book={book} onLikeToggle={handleRecLike} />
                 </div>
                 <div className={styles['rec-info']}>
                   <div className={styles['rec-title']}>{book.title}</div>
@@ -681,7 +658,7 @@ function FavouritesSection() {
           style={isPhoneLayout && displayLikes.length === 1 ? { gridTemplateColumns: '1fr', justifyItems: 'center' } : undefined}
         >
           {displayLikes.map(book => (
-            <div key={book.id} style={isPhoneLayout && displayLikes.length === 1 ? { width: '100%', maxWidth: '280px' } : { width: '100%' }}>
+            <div key={book.id} style={isPhoneLayout && displayLikes.length === 1 ? { width: '100%', maxWidth: '280px', height: '100%', display: 'flex', flexDirection: 'column' } : { width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
               <BookCard book={book} onLikeToggle={handleLikeToggle} />
             </div>
           ))}

@@ -6,6 +6,7 @@ from app.api import bp
 from app.models import Book, Transaction
 from app.models.like import UserBookLike
 from app.services.event import get_today_events, EVENT_WEIGHT
+from app.utils.helpers import enrich_books_data
 
 @bp.route('/books/recommendations', methods=['GET'])
 @jwt_required()
@@ -152,7 +153,7 @@ def get_recommendations():
         ).limit(needed).all()
         recommended_books.extend(pad_books)
 
-    return jsonify({'books': [b.to_dict() for b in recommended_books]}), 200
+    return jsonify({'books': enrich_books_data([b.to_dict() for b in recommended_books], current_user_id)}), 200
 
 @bp.route('/books/<int:book_id>/similar', methods=['GET'])
 def get_similar_books(book_id):
@@ -166,4 +167,12 @@ def get_similar_books(book_id):
         desc(Book.total_copies - Book.available_copies)
     ).limit(10).all()
     
-    return jsonify({'books': [b.to_dict() for b in similar]}), 200
+    current_user_id = None
+    try:
+        from flask_jwt_extended import verify_jwt_in_request
+        verify_jwt_in_request(optional=True)
+        current_user_id = get_jwt_identity()
+    except Exception:
+        pass
+
+    return jsonify({'books': enrich_books_data([b.to_dict() for b in similar], current_user_id)}), 200

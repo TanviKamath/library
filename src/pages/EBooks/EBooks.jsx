@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { getProxiedImageUrl } from '../../utils/image';
+import { LikeButton } from '../../components/LikeButton';
 import styles from './EBooks.module.css';
 
 function getReadingProgress(bookId) {
@@ -68,6 +69,11 @@ export default function EBooks() {
   function handleClearSearch() {
     setSearchQuery('');
     searchInputRef.current?.focus();
+  }
+
+  function handleLikeToggle(bookId, isLiked) {
+    setBooks(prev => prev.map(b => (b.id === bookId ? { ...b, is_liked: isLiked } : b)));
+    window.dispatchEvent(new Event('favourites-updated'));
   }
 
   return (
@@ -155,6 +161,7 @@ export default function EBooks() {
                   {book.title}
                 </div>
                 <span className={styles['ebook-badge']}>E-Book</span>
+                <LikeButton book={book} onLikeToggle={handleLikeToggle} />
 
                 <div className={styles['shelf-info']}>
                   <div className={styles['shelf-title']}>{book.title}</div>
