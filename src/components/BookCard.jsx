@@ -109,9 +109,8 @@ export function BookCard({ book, onLikeToggle }) {
         {isAuthenticated && !isStaff && (
           isAlreadyReservedOrIssued ? (
             <div
+              className={styles['book-action']}
               style={{
-                width: '100%',
-                marginTop: '10px',
                 fontSize: '0.78rem',
                 borderRadius: '16px',
                 padding: '7px 12px',
@@ -135,8 +134,8 @@ export function BookCard({ book, onLikeToggle }) {
             </div>
           ) : (
             <button
-              className="btn btn-primary btn-sm"
-              style={{ width: '100%', marginTop: '10px', fontSize: '0.75rem', borderRadius: '16px', padding: '6px' }}
+              className={`btn btn-primary btn-sm ${styles['book-action']}`}
+              style={{ fontSize: '0.75rem', borderRadius: '16px', padding: '6px' }}
               onClick={handleReserve}
               disabled={reserving}
             >

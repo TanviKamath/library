@@ -114,6 +114,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-height: 18px;
+}
+
+/* Pin the reserve/status action to the bottom of every card so the buttons
+   line up across a row regardless of title length or whether a rating shows. */
+.book-action {
+  width: 100%;
   margin-top: auto;
 }
 
