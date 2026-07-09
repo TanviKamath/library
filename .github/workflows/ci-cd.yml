@@ -7,6 +7,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:   # adds a manual "Run workflow" button in the Actions tab
 
 jobs:
   # ---- Gate 1: the React/Vite frontend must build ----
