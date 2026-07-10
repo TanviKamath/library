@@ -472,6 +472,31 @@ main.sphere-main {
     padding: 24px;
     justify-content: center;
   }
+
+  /* On phones there is no room for the cover to swing open to the left, so
+     fade it away and present the page underneath as a clean centered card. */
+  .sphere-root[data-enlarging='true'] .book-cover-front {
+    transform: none !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 350ms ease;
+  }
+
+  .book-page-stack {
+    inset: 0;
+    border-radius: 8px;
+    padding: 30px 22px;
+  }
+
+  .book-page-title {
+    font-size: 18px;
+  }
+
+  .book-page-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: left;
+  }
 }
 
 @media (max-width: 640px) {

@@ -116,6 +116,35 @@ function computeItemBaseRotation(offsetX, offsetY, sizeX, sizeY, segments) {
   return { rotateX, rotateY };
 }
 
+// Position/size of the opened book overlay. On desktop the cover swings open to
+// the left, so we shift the book right to leave room for it. On phones there is
+// no room for the swing, so the cover is faded out (see CSS) and the page is
+// shown as a centered, viewport-fitted card.
+function computeOverlayGeometry(mainR) {
+  const isMobile = mainR.width <= 768;
+  if (isMobile) {
+    const width = Math.min(340, mainR.width - 32);
+    const height = Math.max(300, Math.min(width * 1.5, mainR.height - 120));
+    return {
+      isMobile,
+      width,
+      height,
+      left: Math.max(10, (mainR.width - width) / 2),
+      top: Math.max(10, (mainR.height - height) / 2)
+    };
+  }
+  const width = 350;
+  const height = 490;
+  const openBookVisualWidth = 600;
+  return {
+    isMobile,
+    width,
+    height,
+    left: Math.max(10, (mainR.width - openBookVisualWidth) / 2 + 250),
+    top: Math.max(10, (mainR.height - height) / 2)
+  };
+}
+
 export default function DomeGallery({
   images = DEFAULT_IMAGES,
   fit = 0.5,
@@ -226,25 +255,11 @@ export default function DomeGallery({
 
       const enlargedOverlay = viewerRef.current?.querySelector('.enlarge');
       if (enlargedOverlay && mainRef.current) {
-        const mainR = mainRef.current.getBoundingClientRect();
-        const isMobile = mainR.width <= 768;
-        const bookCoverWidth = 350;
-        const bookHeight = 490;
-        const openBookVisualWidth = 600;
-
-        let centeredLeft, centeredTop;
-        if (isMobile) {
-          centeredLeft = (mainR.width - bookCoverWidth) / 2;
-          centeredTop = (mainR.height - bookHeight) / 2;
-        } else {
-          centeredLeft = (mainR.width - openBookVisualWidth) / 2 + 250;
-          centeredTop = (mainR.height - bookHeight) / 2;
-        }
-
-        enlargedOverlay.style.left = `${Math.max(10, centeredLeft)}px`;
-        enlargedOverlay.style.top = `${Math.max(10, centeredTop)}px`;
-        enlargedOverlay.style.width = bookCoverWidth + 'px';
-        enlargedOverlay.style.height = bookHeight + 'px';
+        const g = computeOverlayGeometry(mainRef.current.getBoundingClientRect());
+        enlargedOverlay.style.left = `${g.left}px`;
+        enlargedOverlay.style.top = `${g.top}px`;
+        enlargedOverlay.style.width = g.width + 'px';
+        enlargedOverlay.style.height = g.height + 'px';
       }
     });
     ro.observe(root);
@@ -510,34 +525,20 @@ export default function DomeGallery({
       el.style.visibility = 'hidden';
       el.style.zIndex = 0;
 
-      // Calculate centered position for the entire open book (cover + page)
-      // When opened, the book rotates 130deg, so we need to account for the full width
-      const bookCoverWidth = 350;
-      const bookHeight = 490;
-      // When the cover rotates -130deg, it extends significantly to the left
-      // Approximate visual width of open book is about 600px
-      const openBookVisualWidth = 600;
-      
-      const isMobile = mainR.width <= 768;
-      let centeredLeft, centeredTop;
-      if (isMobile) {
-        centeredLeft = (mainR.width - bookCoverWidth) / 2;
-        centeredTop = (mainR.height - bookHeight) / 2;
-      } else {
-        // Shift right to center the entire visual composition
-        centeredLeft = (mainR.width - openBookVisualWidth) / 2 + 250;
-        centeredTop = (mainR.height - bookHeight) / 2;
-      }
-      centeredLeft = Math.max(10, centeredLeft);
-      centeredTop = Math.max(10, centeredTop);
+      // Calculate centered position/size for the opened book overlay.
+      const g = computeOverlayGeometry(mainR);
+      const overlayWidth = g.width;
+      const overlayHeight = g.height;
+      const centeredLeft = g.left;
+      const centeredTop = g.top;
 
       const overlay = document.createElement('div');
       overlay.className = 'enlarge';
       overlay.style.position = 'absolute';
       overlay.style.left = centeredLeft + 'px';
       overlay.style.top = centeredTop + 'px';
-      overlay.style.width = bookCoverWidth + 'px';
-      overlay.style.height = bookHeight + 'px';
+      overlay.style.width = overlayWidth + 'px';
+      overlay.style.height = overlayHeight + 'px';
       overlay.style.opacity = '0';
       overlay.style.zIndex = '30';
       overlay.style.willChange = 'transform, opacity';
@@ -608,8 +609,8 @@ export default function DomeGallery({
 
       const tx0 = tileR.left - centeredLeft;
       const ty0 = tileR.top - centeredTop;
-      const sx0 = tileR.width / 350;
-      const sy0 = tileR.height / 490;
+      const sx0 = tileR.width / overlayWidth;
+      const sy0 = tileR.height / overlayHeight;
 
       const validSx0 = isFinite(sx0) && sx0 > 0 ? sx0 : 1;
       const validSy0 = isFinite(sy0) && sy0 > 0 ? sy0 : 1;
