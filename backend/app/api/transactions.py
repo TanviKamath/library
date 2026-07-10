@@ -154,7 +154,7 @@ def issue_book():
         act_log = ActivityLog(
             user_id=user_id,
             action='issue',
-            details=f"Book '{book.title}' issued to member {user.full_name or user.username}."
+            details=f"Book '{book.title}' issued to member {user.full_name}."
         )
         db.session.add(act_log)
 
@@ -169,7 +169,7 @@ def issue_book():
             recipients=[user.email],
             sender=sender_email
         )
-        msg.body = f"Hello {user.full_name or user.username},\n\nYou have successfully borrowed '{book.title}' from Bookworm Library.\n\nYour return due date is: {due_str}.\n\nPlease ensure it is returned on or before this date to avoid overdue fines.\n\nHappy reading!\nBookworm Library Team"
+        msg.body = f"Hello {user.full_name},\n\nYou have successfully borrowed '{book.title}' from Bookworm Library.\n\nYour return due date is: {due_str}.\n\nPlease ensure it is returned on or before this date to avoid overdue fines.\n\nHappy reading!\nBookworm Library Team"
         _send_email_async(msg)
     except Exception as e:
         print(f"Failed to send checkout email: {e}")
@@ -236,7 +236,7 @@ def return_book():
         act_log = ActivityLog(
             user_id=txn.user_id,
             action='return',
-            details=f"Book '{book.title}' returned by member {return_user.full_name or return_user.username}."
+            details=f"Book '{book.title}' returned by member {return_user.full_name}."
         )
         db.session.add(act_log)
 
@@ -281,7 +281,7 @@ def request_renewal():
         act_log = ActivityLog(
             user_id=txn.user_id,
             action='renew_request',
-            details=f"Member {user.full_name or user.username} requested renewal for book '{book.title}'."
+            details=f"Member {user.full_name} requested renewal for book '{book.title}'."
         )
         db.session.add(act_log)
 
@@ -327,7 +327,7 @@ def approve_renewal():
         act_log = ActivityLog(
             user_id=txn.user_id,
             action='renew_approve',
-            details=f"Renewal approved for book '{book.title}' borrowed by member {user.full_name or user.username}."
+            details=f"Renewal approved for book '{book.title}' borrowed by member {user.full_name}."
         )
         db.session.add(act_log)
 
@@ -353,7 +353,7 @@ def reject_renewal():
         act_log = ActivityLog(
             user_id=txn.user_id,
             action='renew_reject',
-            details=f"Renewal request rejected for book '{book.title}' borrowed by member {user.full_name or user.username}."
+            details=f"Renewal request rejected for book '{book.title}' borrowed by member {user.full_name}."
         )
         db.session.add(act_log)
 
@@ -408,7 +408,7 @@ def borrow_book():
         act_log = ActivityLog(
             user_id=user_id,
             action='issue',
-            details=f"Book '{book.title}' issued to member {user.full_name or user.username}."
+            details=f"Book '{book.title}' issued to member {user.full_name}."
         )
         db.session.add(act_log)
 

@@ -50,8 +50,9 @@ const getDataNumber = (el, name, fallback) => {
 
 function buildItems(pool, seg) {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
-  const evenYs = [-4, -2, 0, 2, 4];
-  const oddYs = [-3, -1, 1, 3, 5];
+  // Extra top & bottom rows added so the sphere reads as a fuller band of books
+  const evenYs = [-6, -4, -2, 0, 2, 4, 6];
+  const oddYs = [-5, -3, -1, 1, 3, 5, 7];
 
   const coords = xCols.flatMap((x, c) => {
     const ys = c % 2 === 0 ? evenYs : oddYs;
@@ -132,7 +133,9 @@ export default function DomeGallery({
   openedImageHeight = '350px',
   imageBorderRadius = '30px',
   openedImageBorderRadius = '30px',
-  grayscale = false
+  grayscale = false,
+  autoRotate = true,
+  autoRotateSpeed = 0.05
 }) {
   const rootRef = useRef(null);
   const mainRef = useRef(null);
@@ -150,6 +153,7 @@ export default function DomeGallery({
   const draggingRef = useRef(false);
   const movedRef = useRef(false);
   const inertiaRAF = useRef(null);
+  const autoRotateRAF = useRef(null);
   const openingRef = useRef(false);
   const openStartedAtRef = useRef(0);
   const lastDragEndAt = useRef(0);
@@ -650,6 +654,35 @@ export default function DomeGallery({
       document.body.classList.remove('dg-scroll-lock');
     };
   }, []);
+
+  // Continuous slow horizontal auto-rotation (mobile + desktop).
+  // Pauses while the user is dragging, during inertia, or when a book is open.
+  useEffect(() => {
+    if (!autoRotate) return;
+    let running = true;
+    const step = () => {
+      if (!running) return;
+      const paused =
+        draggingRef.current ||
+        inertiaRAF.current ||
+        focusedElRef.current ||
+        rootRef.current?.getAttribute('data-enlarging') === 'true';
+      if (!paused) {
+        const nextY = wrapAngleSigned(rotationRef.current.y + autoRotateSpeed);
+        rotationRef.current = { x: rotationRef.current.x, y: nextY };
+        applyTransform(rotationRef.current.x, nextY);
+      }
+      autoRotateRAF.current = requestAnimationFrame(step);
+    };
+    autoRotateRAF.current = requestAnimationFrame(step);
+    return () => {
+      running = false;
+      if (autoRotateRAF.current) {
+        cancelAnimationFrame(autoRotateRAF.current);
+        autoRotateRAF.current = null;
+      }
+    };
+  }, [autoRotate, autoRotateSpeed]);
 
   return (
     <div

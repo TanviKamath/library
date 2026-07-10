@@ -836,9 +836,9 @@ function MembersTab({ isAdmin }) {
 
   function handleExportCSV() {
     if (members.length === 0) return;
-    const headers = ['username', 'email', 'full_name', 'role', 'membership_status', 'membership_expires_at'];
+    const headers = ['full_name', 'email', 'role', 'membership_status', 'membership_expires_at'];
     const rows = members.map(m => [
-      m.username || '', m.email || '', m.full_name || '', m.role || '',
+      m.full_name || '', m.email || '', m.role || '',
       m.membership_status || '', m.membership_expires_at || ''
     ]);
     downloadCSV('members_export.csv', headers, rows);
@@ -846,8 +846,8 @@ function MembersTab({ isAdmin }) {
 
   function handleDownloadTemplate() {
     downloadTemplate('members_template.csv',
-      ['username', 'email', 'full_name', 'password', 'role'],
-      ['jdoe', 'jdoe@example.com', 'John Doe', 'password123', 'member']
+      ['full_name', 'email', 'password', 'role'],
+      ['John Doe', 'jdoe@example.com', 'password123', 'member']
     );
   }
 
@@ -874,7 +874,6 @@ function MembersTab({ isAdmin }) {
       filtered = filtered.filter(m =>
         String(m.id).includes(q) ||
         (m.full_name && m.full_name.toLowerCase().includes(q)) ||
-        (m.username && m.username.toLowerCase().includes(q)) ||
         (m.email && m.email.toLowerCase().includes(q)) ||
         (m.role && m.role.toLowerCase().includes(q))
       );
@@ -882,8 +881,6 @@ function MembersTab({ isAdmin }) {
     return [...filtered].sort((a, b) => {
       if (sort === 'az_name') return (a.full_name || '').localeCompare(b.full_name || '');
       if (sort === 'za_name') return (b.full_name || '').localeCompare(a.full_name || '');
-      if (sort === 'az_username') return (a.username || '').localeCompare(b.username || '');
-      if (sort === 'za_username') return (b.username || '').localeCompare(a.username || '');
       return 0;
     });
   }
@@ -902,14 +899,12 @@ function MembersTab({ isAdmin }) {
         onTemplate={handleDownloadTemplate}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search member name, email, username..."
+        searchPlaceholder="Search member name, email..."
         sort={sort}
         onSortChange={setSort}
         sortOptions={[
           { value: 'az_name', label: 'Name (A-Z)' },
           { value: 'za_name', label: 'Name (Z-A)' },
-          { value: 'az_username', label: 'Username (A-Z)' },
-          { value: 'za_username', label: 'Username (Z-A)' },
         ]}
       >
         <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add member</button>
@@ -921,7 +916,6 @@ function MembersTab({ isAdmin }) {
         empty="No members found."
         columns={[
           { key: 'full_name', header: 'Name', render: m => <span style={{ fontWeight: 500 }}>{m.full_name}</span> },
-          { key: 'username', header: 'Username' },
           { key: 'email', header: 'Email' },
           { key: 'role', header: 'Role', render: m => <span className={`${styles.badge} ${styles[`badge-${m.role}`]}`}>{m.role}</span> },
           { key: 'membership_status', header: 'Status', render: m => <span className={`${styles.badge} ${m.membership_status === 'active' ? styles['badge-active'] : styles['badge-inactive']}`}>{m.membership_status}</span> },
@@ -953,7 +947,6 @@ function MembersTab({ isAdmin }) {
 }
 
 function MemberFormModal({ onSave, onClose }) {
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
@@ -961,7 +954,7 @@ function MemberFormModal({ onSave, onClose }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave({ username, email, full_name: fullName, password, role });
+    onSave({ email, full_name: fullName, password, role });
   }
 
   const req = <span style={{ color: '#dc2626', marginLeft: '2px' }} aria-hidden="true">*</span>;
@@ -1010,35 +1003,20 @@ function MemberFormModal({ onSave, onClose }) {
             />
           </div>
 
-          {/* Username + Email row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label htmlFor="mem-user" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
-                Username{req}
-              </label>
-              <input
-                id="mem-user"
-                className="input"
-                placeholder="e.g. jdoe"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label htmlFor="mem-email" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
-                Email{req}
-              </label>
-              <input
-                id="mem-email"
-                type="email"
-                className="input"
-                placeholder="e.g. jane@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
+          {/* Email row */}
+          <div className="form-group" style={{ margin: 0 }}>
+            <label htmlFor="mem-email" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+              Email{req}
+            </label>
+            <input
+              id="mem-email"
+              type="email"
+              className="input"
+              placeholder="e.g. jane@email.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
           </div>
 
           {/* Password + Role row */}
@@ -1115,7 +1093,6 @@ function SearchableDropdown({ label, options, value, onChange, placeholder, rend
       (o.title && String(o.title).toLowerCase().includes(q)) ||
       (o.author && String(o.author).toLowerCase().includes(q)) ||
       (o.full_name && String(o.full_name).toLowerCase().includes(q)) ||
-      (o.username && String(o.username).toLowerCase().includes(q)) ||
       (o.email && String(o.email).toLowerCase().includes(q))
     );
   });
@@ -1326,21 +1303,21 @@ function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUser
           <SearchableDropdown
             label="Member"
             placeholder="Select a member…"
-            searchPlaceholder="Search by member name, username, or email…"
+            searchPlaceholder="Search by member name or email…"
             options={members}
             value={issueUserId}
             onChange={setIssueUserId}
             renderOption={(m, isSelectedTrigger) => !m ? null : isSelectedTrigger ? (
-              <span>{m.full_name || m.username || 'Member'} <span style={{ color: '#8c827a' }}>({m.username ? `@${m.username}` : ''})</span></span>
+              <span>{m.full_name || 'Member'}</span>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justify: 'space-between', width: '100%', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-terracotta, #c86d51)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, flexShrink: 0 }}>
-                    {(m.full_name || m.username || '?').charAt(0).toUpperCase()}
+                    {(m.full_name || '?').charAt(0).toUpperCase()}
                   </div>
                   <div style={{ overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: '13.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.full_name || m.username || 'Unnamed Member'}</div>
-                    <div style={{ fontSize: '11.5px', color: '#8c827a' }}>{m.username ? `@${m.username}` : ''} {m.email ? `• ${m.email}` : ''}</div>
+                    <div style={{ fontWeight: 600, fontSize: '13.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.full_name || 'Unnamed Member'}</div>
+                    <div style={{ fontSize: '11.5px', color: '#8c827a' }}>{m.email || ''}</div>
                   </div>
                 </div>
                 <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'capitalize', padding: '2px 8px', borderRadius: '12px', background: '#f0fdf4', color: '#166534', flexShrink: 0 }}>

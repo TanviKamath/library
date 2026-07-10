@@ -140,7 +140,7 @@ export function BottomNav() {
             >
               <div className={styles.sheetAvatar}>{getInitials(user?.full_name)}</div>
               <div className={styles.sheetUserInfo}>
-                <div className={styles.sheetName}>{user?.full_name || user?.username}</div>
+                <div className={styles.sheetName}>{user?.full_name}</div>
                 <div className={styles.sheetRole}>{user?.role}</div>
               </div>
             </button>

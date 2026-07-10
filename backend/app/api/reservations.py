@@ -61,10 +61,10 @@ def join_waitlist():
     user = User.query.get(user_id)
     if user:
         if res.status == 'ready':
-            details = f"Member {user.full_name or user.username} reserved '{book.title}' (placed on hold, ready for pickup)."
+            details = f"Member {user.full_name} reserved '{book.title}' (placed on hold, ready for pickup)."
         else:
             position = Reservation.query.filter_by(book_id=book_id, status='waiting').count() + 1
-            details = f"Member {user.full_name or user.username} joined the waitlist for '{book.title}' (queue position #{position})."
+            details = f"Member {user.full_name} joined the waitlist for '{book.title}' (queue position #{position})."
             
         act_log = ActivityLog(
             user_id=user_id,
@@ -162,7 +162,7 @@ def cancel_reservation():
                 next_log = ActivityLog(
                     user_id=next_res.user_id,
                     action='reserve_ready',
-                    details=f"Reservation for '{book.title}' is now ready for pickup by member {next_user.full_name or next_user.username}."
+                    details=f"Reservation for '{book.title}' is now ready for pickup by member {next_user.full_name}."
                 )
                 db.session.add(next_log)
         else:
@@ -176,7 +176,7 @@ def cancel_reservation():
         act_log = ActivityLog(
             user_id=user_id,
             action='reserve_cancel',
-            details=f"Member {user.full_name or user.username} cancelled reservation for '{book.title}'."
+            details=f"Member {user.full_name} cancelled reservation for '{book.title}'."
         )
         db.session.add(act_log)
 
@@ -286,7 +286,7 @@ def bulk_upload_reservations():
             act_log = ActivityLog(
                 user_id=admin_id,
                 action='bulk_import',
-                details=f"Librarian {admin_user.full_name or admin_user.username} bulk imported {added} reservations via CSV."
+                details=f"Librarian {admin_user.full_name} bulk imported {added} reservations via CSV."
             )
             db.session.add(act_log)
 

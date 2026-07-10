@@ -214,7 +214,7 @@ def bulk_upload_books():
             act_log = ActivityLog(
                 user_id=user_id,
                 action='bulk_import',
-                details=f"Librarian {user.full_name or user.username} bulk imported {books_added} books via CSV."
+                details=f"Librarian {user.full_name} bulk imported {books_added} books via CSV."
             )
             db.session.add(act_log)
 
@@ -404,6 +404,24 @@ def read_book_content(id):
     clean_lines = lines[start_idx:end_idx]
     clean_text = '\n'.join(clean_lines).strip()
 
+    # ── Clean up Project Gutenberg plain-text formatting artifacts ───────────────
+    # Remove [Illustration: ...] / [Sidenote: ...] / [Footnote: ...] editorial
+    # blocks (they can span multiple lines; the char-class matches newlines too).
+    clean_text = re.sub(r'\[\s*illustration[^\]]*\]', '', clean_text, flags=re.IGNORECASE)
+    clean_text = re.sub(r'\[\s*(?:sidenote|footnote|note)[^\]]*\]', '', clean_text, flags=re.IGNORECASE)
+    # Gutenberg marks italics/emphasis with underscores (_word_). Literal prose
+    # effectively never contains underscores, so strip them all — this is the
+    # single biggest readability fix for the reader view.
+    clean_text = clean_text.replace('_', '')
+    # Collapse rows of decorative characters (***, ----, ====, etc.) to blank lines
+    # so they act as paragraph separators instead of leaking in as junk "paragraphs".
+    clean_text = re.sub(r'(?m)^[ \t]*[*\-=~#.·•]{3,}[ \t]*$', '', clean_text)
+
+    def _is_junk_paragraph(text):
+        # Drop leftovers that are empty, all-punctuation, or single stray brackets.
+        stripped = re.sub(r'[\s\W_]', '', text)
+        return len(stripped) == 0
+
     def split_long_block(block, target_words=140):
         sentences = re.split(r'(?<=[.!?])\s+', block.strip())
         chunks = []
@@ -434,7 +452,9 @@ def read_book_content(id):
 
     for block in raw_blocks:
         normalized_block = re.sub(r'\s*\n\s*', ' ', block).strip()
-        if not normalized_block:
+        # Collapse any run of internal spaces left behind by removed artifacts.
+        normalized_block = re.sub(r'[ \t]{2,}', ' ', normalized_block).strip()
+        if not normalized_block or _is_junk_paragraph(normalized_block):
             continue
 
         if len(normalized_block.split()) > 220:

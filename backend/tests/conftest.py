@@ -29,10 +29,10 @@ def client(app):
 
 @pytest.fixture
 def init_db(app):
-    admin = User(username='admin', email='admin@test.com', full_name='Admin Test', role='admin') # type: ignore
+    admin = User(email='admin@test.com', full_name='Admin Test', role='admin') # type: ignore
     admin.set_password('admin')
 
-    member = User(username='member', email='member@test.com', full_name='Member Test', role='member') # type: ignore
+    member = User(email='member@test.com', full_name='Member Test', role='member') # type: ignore
     member.set_password('member')
 
     cat = Category(name='Fiction') # type: ignore

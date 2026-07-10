@@ -30,7 +30,7 @@ export default function Dashboard() {
   return (
     <div className={styles.dashboard}>
       <div className={styles.greeting}>
-        <h1>Welcome back, {user?.full_name?.split(' ')[0] || user?.username}</h1>
+        <h1>Welcome back, {user?.full_name?.split(' ')[0]}</h1>
         <p>{isStaff ? 'Here\'s what\'s happening in the library today.' : 'Here\'s your reading overview.'}</p>
       </div>
       {isStaff ? <StaffDashboard /> : <MemberDashboard />}

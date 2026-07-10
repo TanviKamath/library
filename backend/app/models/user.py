@@ -6,7 +6,6 @@ class User(db.Model):
     __tablename__ = 'app_user'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
@@ -26,7 +25,6 @@ class User(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'username': self.username,
             'email': self.email,
             'full_name': self.full_name,
             'role': self.role,
@@ -36,4 +34,4 @@ class User(db.Model):
         }
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.email}>'

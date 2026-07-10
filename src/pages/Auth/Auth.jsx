@@ -11,7 +11,6 @@ export default function Auth({ initialMode = 'signup' }) {
 
   const [mode, setMode] = useState(initialMode); // 'signup' | 'signin'
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -43,7 +42,7 @@ export default function Auth({ initialMode = 'signup' }) {
     setLoading(true);
     try {
       if (isSignup) {
-        await register({ full_name: fullName, username, email, password });
+        await register({ full_name: fullName, email, password });
       } else {
         await login(email, password);
       }
@@ -129,23 +128,6 @@ export default function Auth({ initialMode = 'signup' }) {
                     required
                     autoComplete="name"
                     autoFocus
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="auth-username" className="form-label">
-                    Username
-                  </label>
-                  <input
-                    id="auth-username"
-                    type="text"
-                    className="input"
-                    placeholder="ada"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    minLength={2}
-                    autoComplete="username"
                   />
                 </div>
               </>

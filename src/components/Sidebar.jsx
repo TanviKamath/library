@@ -188,7 +188,7 @@ export function Sidebar({ collapsed, toggleCollapse, isHovered, setIsHovered }) 
               {getInitials(user?.full_name)}
             </div>
             <div className={styles['sidebar-user-info']}>
-              <div className={styles['sidebar-user-name']}>{user?.full_name || user?.username}</div>
+              <div className={styles['sidebar-user-name']}>{user?.full_name}</div>
               <div className={styles['sidebar-user-role']}>{user?.role}</div>
             </div>
           </div>

@@ -102,7 +102,7 @@ def bulk_upload_categories():
             act_log = ActivityLog(
                 user_id=user_id,
                 action='bulk_import',
-                details=f"Librarian {user.full_name or user.username} bulk imported {added} categories via CSV."
+                details=f"Librarian {user.full_name} bulk imported {added} categories via CSV."
             )
             db.session.add(act_log)
 

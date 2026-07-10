@@ -78,7 +78,7 @@ def pay_fine(id):
             act_log = ActivityLog(
                 user_id=txn.user_id,
                 action='fine_pay',
-                details=f"Collected fine of ₹{txn.fine_amount} from member {user.full_name or user.username} for book '{book.title}'."
+                details=f"Collected fine of ₹{txn.fine_amount} from member {user.full_name} for book '{book.title}'."
             )
             db.session.add(act_log)
 

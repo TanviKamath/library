@@ -39,19 +39,15 @@ def login():
 def register():
     """Public self-service signup. Creates a member and logs them straight in."""
     data = request.validated_data
-    username = data['username'].strip()
     email = data['email'].strip().lower()
 
     # Reject duplicates (case-insensitive email match)
     if db.session.query(User.id).filter(db.func.lower(User.email) == email).first():
         return jsonify({'error': 'An account with this email already exists'}), 409
-    if db.session.query(User.id).filter_by(username=username).first():
-        return jsonify({'error': 'That username is already taken'}), 409
 
     new_user = User(  # pyrefly: ignore
-        username=username,  # pyrefly: ignore
         email=email,  # pyrefly: ignore
-        full_name=data.get('full_name', '').strip() or username,  # pyrefly: ignore
+        full_name=data['full_name'].strip(),  # pyrefly: ignore
         role='member',  # pyrefly: ignore
         membership_expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=365)  # pyrefly: ignore
     )

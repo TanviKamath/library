@@ -94,7 +94,7 @@ export default function Profile() {
           {getInitials(user?.full_name)}
         </div>
         <div className={styles['profile-header-info']}>
-          <h1>{user?.full_name || user?.username}</h1>
+          <h1>{user?.full_name}</h1>
           <div className={styles['profile-header-meta']}>
             <span className={styles['role-badge']}>{user?.role}</span>
             {user?.role !== 'admin' && user?.role !== 'librarian' && (
@@ -153,10 +153,6 @@ export default function Profile() {
               <div className={styles['info-item']}>
                 <span className={styles['info-label']}>Full Name</span>
                 <span className={styles['info-value']}>{user?.full_name || '—'}</span>
-              </div>
-              <div className={styles['info-item']}>
-                <span className={styles['info-label']}>Username</span>
-                <span className={styles['info-value']}>{user?.username}</span>
               </div>
               <div className={styles['info-item']}>
                 <span className={styles['info-label']}>Email</span>

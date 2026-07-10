@@ -47,17 +47,14 @@ def create_member():
     data = request.validated_data
 
     # Validate required fields
-    if not data.get('username') or not data.get('email') or not data.get('password'):
-        return jsonify({'error': 'Username, email, and password are required'}), 400
+    if not data.get('full_name') or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Name, email, and password are required'}), 400
 
     # Check for duplicates (optimized ID-only select)
     if db.session.query(User.id).filter_by(email=data['email']).first():
         return jsonify({'error': 'A user with this email already exists'}), 409
-    if db.session.query(User.id).filter_by(username=data['username']).first():
-        return jsonify({'error': 'A user with this username already exists'}), 409
 
     new_user = User(  # pyrefly: ignore
-        username=data['username'], # pyrefly: ignore
         email=data['email'], # pyrefly: ignore
         full_name=data.get('full_name', ''), # pyrefly: ignore
         role=data.get('role', 'member'), # pyrefly: ignore
@@ -84,11 +81,6 @@ def update_member(id):
         if existing_id and existing_id[0] != id:
             return jsonify({'error': 'A user with this email already exists'}), 409
         member.email = data['email']
-    if 'username' in data:
-        existing_id = db.session.query(User.id).filter_by(username=data['username']).first()
-        if existing_id and existing_id[0] != id:
-            return jsonify({'error': 'A user with this username already exists'}), 409
-        member.username = data['username']
     if 'role' in data:
         member.role = data['role']
     if 'membership_status' in data:
@@ -143,19 +135,17 @@ def bulk_upload_members():
         added = 0
         for row in csv_input:
             row = {k.strip().lower(): v.strip() for k, v in row.items() if k}
-            username = row.get('username')
             email = row.get('email')
             password = row.get('password', 'password123')
             full_name = row.get('full_name', '')
             role = row.get('role', 'member')
-            
-            if not username or not email:
+
+            if not full_name or not email:
                 continue
-            if User.query.filter_by(email=email).first() or User.query.filter_by(username=username).first():
+            if User.query.filter_by(email=email).first():
                 continue
-                
+
             new_user = User(
-                username=username,
                 email=email,
                 full_name=full_name,
                 role=role,
@@ -172,7 +162,7 @@ def bulk_upload_members():
             act_log = ActivityLog(
                 user_id=user_id,
                 action='bulk_import',
-                details=f"Librarian {user.full_name or user.username} bulk imported {added} members via CSV."
+                details=f"Librarian {user.full_name} bulk imported {added} members via CSV."
             )
             db.session.add(act_log)
 

@@ -21,7 +21,7 @@ class Reservation(db.Model):
             'book_title': self.book.title if self.book else None,
             'book_cover': self.book.cover_image_url if self.book else None,
             'user_id': self.user_id,
-            'user_name': self.user.username if self.user else None,
+            'user_name': self.user.full_name if self.user else None,
             'status': self.status,
             'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
             'ready_at': self.ready_at.isoformat() + 'Z' if self.ready_at else None

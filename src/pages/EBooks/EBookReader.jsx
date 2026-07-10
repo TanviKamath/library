@@ -46,7 +46,7 @@ function paginateIntoPages(paragraphs, containerWidth, containerHeight, fontSize
   measureEl.style.visibility = 'hidden';
   document.body.appendChild(measureEl);
 
-  const maxHeight = Math.max(200, height - 100);
+  const maxHeight = Math.max(200, height);
   const pages = [];
   let currentPage = [];
 

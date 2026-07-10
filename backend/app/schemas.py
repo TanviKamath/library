@@ -20,14 +20,12 @@ class BookSchema(Schema):
     quote_verified = fields.Boolean()
 
 class RegisterSchema(Schema):
-    username = fields.String(required=True, validate=validate.Length(min=2, max=50))
     email = fields.Email(required=True, validate=validate.Length(max=100))
     password = fields.String(required=True, validate=validate.Length(min=4, max=100))
-    full_name = fields.String(validate=validate.Length(max=100))
+    full_name = fields.String(required=True, validate=validate.Length(min=1, max=100))
 
 class MemberSchema(Schema):
-    username = fields.String(required=True, validate=validate.Length(min=2, max=64))
     email = fields.Email(required=True, validate=validate.Length(max=120))
     password = fields.String(required=True, validate=validate.Length(min=4, max=100))
-    full_name = fields.String(validate=validate.Length(max=100))
+    full_name = fields.String(required=True, validate=validate.Length(min=1, max=100))
     role = fields.String(validate=validate.OneOf(['member', 'librarian', 'admin']))
