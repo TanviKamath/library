@@ -364,6 +364,8 @@ class Media {
     this.plane.setParent(this.scene);
   }
   createTitle() {
+    // Skip the golden text badge entirely when there's no label to show.
+    if (!this.text) return;
     this.title = new Title({
       gl: this.gl,
       plane: this.plane,

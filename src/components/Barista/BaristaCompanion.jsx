@@ -246,6 +246,12 @@ export default function BaristaCompanion() {
     goTo(NODE.REGULAR_GREETING, STRINGS.SPIN_COMPLETE);
   };
 
+  // "Spin again" — pull a fresh wheel with a new set of books and winner.
+  const handleSpinAgain = () => {
+    setSpinData(null);
+    fetchSpin();
+  };
+
   const handleClose = () => {
     setIsOpen(false);
     if (
@@ -431,12 +437,14 @@ export default function BaristaCompanion() {
         return (
           <div className={styles.interactiveArea}>
             <SpinWheel
+              key={spinData.interaction_id}
               segments={spinData.segments}
               winningIndex={spinData.winning_index}
               interactionId={spinData.interaction_id}
               voiceLine={spinData.voice_line}
               onAccept={handleSpinAccept}
               onComplete={handleSpinComplete}
+              onSpinAgain={handleSpinAgain}
             />
           </div>
         );

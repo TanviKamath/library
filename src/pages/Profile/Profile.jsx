@@ -24,6 +24,8 @@ export default function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [pwMode, setPwMode] = useState(false);
   const [msg, setMsg] = useState(null);
+  // Error shown inside the password form itself (not the page-top banner).
+  const [pwMsg, setPwMsg] = useState(null);
 
   // Stats
   const [borrows, setBorrows] = useState([]);
@@ -75,6 +77,7 @@ export default function Profile() {
   async function handleChangePassword(e) {
     e.preventDefault();
     setMsg(null);
+    setPwMsg(null);
     try {
       await api.put('/auth/password', { current_password: currentPw, new_password: newPw });
       setPwMode(false);
@@ -82,7 +85,7 @@ export default function Profile() {
       setNewPw('');
       setMsg({ type: 'success', text: 'Password changed successfully.' });
     } catch (err) {
-      setMsg({ type: 'error', text: err.message });
+      setPwMsg({ type: 'error', text: err.message });
     }
   }
 
@@ -195,9 +198,10 @@ export default function Profile() {
               <label htmlFor="new-pw" className="form-label">New Password</label>
               <input id="new-pw" type="password" className="input" value={newPw} onChange={e => setNewPw(e.target.value)} required minLength={4} />
             </div>
+            {pwMsg && <div className={`${styles.msg} ${styles[`msg-${pwMsg.type}`]}`}>{pwMsg.text}</div>}
             <div className={styles['edit-form-actions']}>
               <button type="submit" className="btn btn-primary btn-sm">Change Password</button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPwMode(false)}>Cancel</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setPwMode(false); setPwMsg(null); }}>Cancel</button>
             </div>
           </form>
         ) : (

@@ -155,6 +155,8 @@
 }
 
 .stat-card {
+  display: flex;
+  flex-direction: column;
   background: var(--color-ivory);
   border-radius: var(--radius-lg);
   padding: var(--space-3) var(--space-4);
@@ -174,7 +176,11 @@
   letter-spacing: var(--ls-widest);
   text-transform: uppercase;
   color: var(--color-charcoal-light);
-  margin-bottom: 2px;
+  margin-bottom: var(--space-2);
+  /* Reserve two lines so labels that wrap (e.g. "Currently Borrowed") keep
+     every card's number aligned on the same baseline. */
+  min-height: 2.4em;
+  line-height: 1.2;
 }
 
 .stat-value {
@@ -183,6 +189,7 @@
   font-weight: var(--fw-semibold);
   color: var(--color-espresso);
   line-height: 1;
+  margin-top: auto;
 }
 
 .stat-card.accent {

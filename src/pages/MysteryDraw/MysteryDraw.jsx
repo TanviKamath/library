@@ -144,9 +144,9 @@ export default function MysteryDraw() {
   };
 
   // Convert cards to CircularGallery items showing card back image
-  const galleryItems = books.map((_, idx) => ({
+  const galleryItems = books.map(() => ({
     image: '/mystic_card_back.png',
-    text: `Card ${idx + 1}`
+    text: ''
   }));
 
   return (

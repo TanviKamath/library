@@ -13,6 +13,7 @@ import styles from './SpinWheel.module.css';
  *  - voiceLine: string, Finn's voice line
  *  - onComplete: () => void — called when the user finishes
  *  - onAccept: (book) => void — called when user accepts the winning book
+ *  - onSpinAgain: () => void — called when user wants a fresh wheel to spin again
  */
 export default function SpinWheel({
   segments = [],
@@ -21,6 +22,7 @@ export default function SpinWheel({
   voiceLine,
   onComplete,
   onAccept,
+  onSpinAgain,
 }) {
   const [spinning, setSpinning] = useState(false);
   const [hasSpun, setHasSpun] = useState(false);
@@ -70,7 +72,10 @@ export default function SpinWheel({
     }, 4200);
   }, [spinning, hasSpun, winningIndex, segmentAngle]);
 
-  /* ── Respond to winning book ── */
+  /* ── Respond to winning book ──
+   * accepted:  user takes the winning book.
+   * declined:  soft dislike. If a re-spin handler is provided, fetch a fresh
+   *            wheel so the user can spin again; otherwise just finish. */
   const handleRespond = async (accepted) => {
     try {
       await api.post('/barista/respond', {
@@ -83,6 +88,8 @@ export default function SpinWheel({
     }
     if (accepted && segments[winningIndex]) {
       onAccept?.(segments[winningIndex]);
+    } else if (onSpinAgain) {
+      onSpinAgain();
     } else {
       onComplete?.();
     }
@@ -165,27 +172,25 @@ export default function SpinWheel({
                 />
               </svg>
             </div>
+
+            {/* The hub itself is the button — glows/breathes to invite a click */}
+            {!hasSpun && (
+              <button
+                type="button"
+                className={styles.hubButton}
+                onClick={(e) => { e.stopPropagation(); doSpin(); }}
+                disabled={spinning}
+                aria-label="Spin the wheel"
+              >
+                <span className={styles.hubText}>{spinning ? '•••' : 'SPIN'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Spin button or result */}
-      {!hasSpun ? (
-        <button
-          className={styles.spinButton}
-          onClick={doSpin}
-          disabled={spinning}
-        >
-          {spinning ? (
-            <>
-              <span className={styles.spinnerDot} />
-              Spinning...
-            </>
-          ) : (
-            '🎰  Spin the Wheel!'
-          )}
-        </button>
-      ) : showResult ? (
+      {/* Result (the wheel hub is the spin button now) */}
+      {hasSpun && showResult ? (
         <div className={styles.resultArea}>
           <div className={styles.resultCard}>
             <span className={styles.resultRibbon}>Winner!</span>
@@ -226,7 +231,7 @@ export default function SpinWheel({
               className={`${styles.resultBtn} ${styles.resultDecline}`}
               onClick={() => handleRespond(false)}
             >
-              Spin again next time
+              🎰  Spin again
             </button>
           </div>
         </div>
