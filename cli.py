@@ -14,6 +14,7 @@ Commands
     dev                 Run frontend + backend together (Ctrl+C stops both)
     db upgrade          Apply database migrations (flask db upgrade)
     db pull             Dump the live Render Postgres DB to backend/backups/
+    db sync             Copy the live DB into your local SQLite app.db
     git frontend -m ""  Stage only frontend paths, commit and push
     git backend  -m ""  Stage only backend paths, commit and push
     git database -m ""  Stage only DB/migration paths, commit and push
@@ -185,29 +186,88 @@ def cmd_db_upgrade(_args):
     run(_flask_cmd("db", "upgrade"), cwd=BACKEND)
 
 
-def cmd_db_pull(_args):
-    load_env()
+def _normalize_pg_url(url):
+    """SQLAlchemy/Render style rewrite so the URL is a valid libpq connection URI."""
+    if url and url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
+def _render_url():
+    """The live Render Postgres URL (source of a pull/sync), normalized. Exits
+    with a helpful message if it isn't configured."""
     url = os.environ.get("RENDER_DATABASE_URL") or os.environ.get("DATABASE_URL")
     if not url:
         die("RENDER_DATABASE_URL is not set. Put the Render *External* Database "
             "URL in a .env file at the repo root (RENDER_DATABASE_URL=...) or "
-            "export it in your shell, then re-run 'python cli.py db pull'.")
-    # SQLAlchemy/Render style rewrite so the URL is a valid libpq connection URI.
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+            "export it in your shell, then re-run.")
+    return _normalize_pg_url(url)
 
-    pg_dump = venv_bin("pg_dump")
-    if pg_dump == "pg_dump" and not which("pg_dump"):
-        die("pg_dump not found. Install the PostgreSQL client tools (its major "
-            "version should match Render's Postgres) and ensure pg_dump is on PATH.")
 
+def _require_tool(name):
+    """Resolve a Postgres client tool (pg_dump/psql), exiting if it's missing."""
+    tool = venv_bin(name)
+    if tool == name and not which(name):
+        die(f"{name} not found. Install the PostgreSQL client tools (its major "
+            f"version should match Render's Postgres) and ensure {name} is on PATH.")
+    return tool
+
+
+def _dump_render_db():
+    """pg_dump the live Render DB to a timestamped file in backend/backups/.
+    Returns the path to the written .sql file."""
+    url = _render_url()
+    pg_dump = _require_tool("pg_dump")
     BACKUPS.mkdir(parents=True, exist_ok=True)
     outfile = BACKUPS / f"render_{datetime.now():%Y%m%d_%H%M%S}.sql"
-    run([pg_dump, "--no-owner", "--no-privileges", "-f", str(outfile), url],
-        cwd=BACKEND)
-    print(f"\033[32msaved:\033[0m {outfile}")
+    # --clean --if-exists so the dump drops existing objects before recreating
+    # them, which lets 'db sync' reload into a non-empty local DB idempotently.
+    run([pg_dump, "--no-owner", "--no-privileges", "--clean", "--if-exists",
+         "-f", str(outfile), url], cwd=BACKEND)
+    return outfile
+
+
+def cmd_db_pull(_args):
+    load_env()
+    outfile = _dump_render_db()
+    print(f"{GREEN}saved:{RESET} {outfile}")
     print("This is a plain-SQL dump. To load it into a local Postgres later:\n"
           f"    psql \"<local-db-url>\" -f \"{outfile}\"")
+
+
+def cmd_db_sync(_args):
+    """Copy the live Render DB into the local SQLite app.db so your local data
+    (what DB Browser for SQLite shows, and what the app runs on) mirrors live.
+    The live database is only READ; only the local app.db is written to."""
+    load_env()
+    source = _render_url()
+
+    app_db = BACKEND / "app.db"
+    dest = "sqlite:///" + str(app_db)
+
+    # Safety net: back up the current local app.db before overwriting its data,
+    # so a bad sync is always recoverable.
+    if app_db.exists():
+        BACKUPS.mkdir(parents=True, exist_ok=True)
+        backup = BACKUPS / f"app_backup_{datetime.now():%Y%m%d_%H%M%S}.db"
+        shutil.copy2(app_db, backup)
+        print(f"{GREEN}backed up local db:{RESET} {backup}")
+
+    print(f"{YELLOW}Refreshing local app.db from live. The live Render DB is only "
+          f"read, never changed.{RESET}")
+    print(f"{CYAN}copying live data into local app.db...{RESET}")
+
+    python = venv_bin("python")
+    env = dict(os.environ, SYNC_SOURCE_URL=source, SYNC_DEST_URL=dest)
+    script = BACKEND / "_sync_pg_to_sqlite.py"
+    printable = f"{python} {script.name}"
+    print(f"{CYAN}$ {printable}{RESET}  (cwd={BACKEND})")
+    result = subprocess.run([python, str(script)], cwd=str(BACKEND), env=env)
+    if result.returncode != 0:
+        die("sync failed. If it says 'database is locked', close DB Browser for "
+            "SQLite (or any tool holding app.db) and try again.")
+    print(f"{GREEN}done:{RESET} local app.db now mirrors live. "
+          f"Refresh DB Browser for SQLite to see it.")
 
 
 # --------------------------------------------------------------------------- #
@@ -272,6 +332,7 @@ def build_parser():
             + cmd("bb backend", "Run only the backend  (port 5000)")
             + cmd("bb db upgrade", "Apply database migrations")
             + cmd("bb db pull", "Dump the live Render DB to backend/backups/")
+            + cmd("bb db sync", "Copy live DB into your local SQLite app.db")
             + "\n"
             + f"  {BOLD}{YELLOW}Commit + push (message in quotes is required):{RESET}\n"
             + cmd('bb git all      -m "message"', "Stage ALL changes, commit and push (auto-deploy)")
@@ -291,6 +352,7 @@ def build_parser():
     db_sub = db.add_subparsers(dest="db_command", required=True)
     db_sub.add_parser("upgrade", help="Apply migrations (flask db upgrade)").set_defaults(func=cmd_db_upgrade)
     db_sub.add_parser("pull", help="Dump the live Render Postgres DB to backend/backups/").set_defaults(func=cmd_db_pull)
+    db_sub.add_parser("sync", help="Copy live DB into your local SQLite app.db").set_defaults(func=cmd_db_sync)
 
     git = sub.add_parser("git", help="Scoped commit + push for one service")
     git.add_argument("service", choices=[*GIT_SCOPES, "all"],
