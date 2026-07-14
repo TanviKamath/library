@@ -218,6 +218,41 @@ function CSVToolbar({ onExport, onImport, onTemplate, count, label, children, se
   );
 }
 
+/* ── Reusable Confirmation Modal (replaces native confirm()) ── */
+function ConfirmModal({ title, message, confirmLabel = 'Confirm', danger = false, onConfirm, onClose }) {
+  return (
+    <div className={styles['modal-overlay']} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+          <h2 style={{ margin: 0, fontSize: 'var(--fs-xl)', color: 'var(--color-espresso)' }}>{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-charcoal-light)', padding: '4px', borderRadius: 'var(--radius-sm)', lineHeight: 1, marginTop: '-2px' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <p style={{ margin: '0 0 var(--space-6)', fontSize: 'var(--fs-sm)', color: 'var(--color-charcoal-light)', lineHeight: 1.6 }}>{message}</p>
+        <div className={styles['modal-actions']} style={{ marginTop: 0 }}>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={danger ? { background: '#dc2626', borderColor: '#dc2626', color: '#fff' } : undefined}
+            onClick={onConfirm}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -531,6 +566,7 @@ function BooksTab() {
   const [msg, setMsg] = useState(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('az_title');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => { loadBooks(); }, []);
 
@@ -561,8 +597,8 @@ function BooksTab() {
     } catch (err) { setMsg({ type: 'error', text: err.message }); }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this book?')) return;
+  async function performDeleteBook(id) {
+    setConfirmDelete(null);
     try {
       await api.delete(`/books/${id}`);
       setMsg({ type: 'success', text: 'Book deleted.' });
@@ -677,7 +713,7 @@ function BooksTab() {
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
-              <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => handleDelete(b.id)} title="Delete book" aria-label="Delete book">
+              <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => setConfirmDelete(b)} title="Delete book" aria-label="Delete book">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="3 6 5 6 21 6"/>
                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -696,6 +732,17 @@ function BooksTab() {
           categories={categories}
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditBook(null); }}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmModal
+          title="Delete book?"
+          message={`"${confirmDelete.title}" will be permanently removed from the catalog. This action cannot be undone.`}
+          confirmLabel="Delete book"
+          danger
+          onConfirm={() => performDeleteBook(confirmDelete.id)}
+          onClose={() => setConfirmDelete(null)}
         />
       )}
     </>
@@ -799,6 +846,8 @@ function MembersTab({ isAdmin }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editMember, setEditMember] = useState(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(null);
   const [msg, setMsg] = useState(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('az_name');
@@ -812,17 +861,22 @@ function MembersTab({ isAdmin }) {
     setLoading(false);
   }
 
-  async function handleCreate(data) {
+  async function handleSave(data) {
     setMsg(null);
     try {
-      await api.post('/members', data);
-      setMsg({ type: 'success', text: 'Member created!' });
-      setShowForm(false); loadMembers();
+      if (editMember) {
+        await api.put(`/members/${editMember.id}`, data);
+        setMsg({ type: 'success', text: 'Member updated!' });
+      } else {
+        await api.post('/members', data);
+        setMsg({ type: 'success', text: 'Member created!' });
+      }
+      setShowForm(false); setEditMember(null); loadMembers();
     } catch (err) { setMsg({ type: 'error', text: err.message }); }
   }
 
-  async function handleDeactivate(id) {
-    if (!confirm('Deactivate this member?')) return;
+  async function performDeactivate(id) {
+    setConfirmDeactivate(null);
     try { await api.delete(`/members/${id}`); setMsg({ type: 'success', text: 'Member deactivated.' }); loadMembers(); }
     catch (err) { setMsg({ type: 'error', text: err.message }); }
   }
@@ -907,7 +961,7 @@ function MembersTab({ isAdmin }) {
           { value: 'za_name', label: 'Name (Z-A)' },
         ]}
       >
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add member</button>
+        <button className="btn btn-primary btn-sm" onClick={() => { setEditMember(null); setShowForm(true); }}>+ Add member</button>
       </CSVToolbar>
 
       <h3 style={{ marginBottom: 'var(--space-4)' }}>Registered Members ({displayedMembers.length})</h3>
@@ -922,6 +976,12 @@ function MembersTab({ isAdmin }) {
           { key: 'membership_expires_at', header: 'Expires', render: m => formatDate(m.membership_expires_at) },
           { key: 'actions', header: 'Actions', render: m => (
             <>
+              <button className={styles['icon-btn']} onClick={() => { setEditMember(m); setShowForm(true); }} title="Edit member" aria-label="Edit member">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
               <button className={styles['icon-btn']} onClick={() => handleRenewMembership(m.id)} title="Renew membership" aria-label="Renew membership">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="23 4 23 10 17 10"/>
@@ -929,7 +989,7 @@ function MembersTab({ isAdmin }) {
                 </svg>
               </button>
               {isAdmin && (
-                <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => handleDeactivate(m.id)} title="Deactivate member" aria-label="Deactivate member">
+                <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => setConfirmDeactivate(m)} title="Deactivate member" aria-label="Deactivate member">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
@@ -941,20 +1001,43 @@ function MembersTab({ isAdmin }) {
         ]}
       />
 
-      {showForm && <MemberFormModal onSave={handleCreate} onClose={() => setShowForm(false)} />}
+      {showForm && (
+        <MemberFormModal
+          member={editMember}
+          onSave={handleSave}
+          onClose={() => { setShowForm(false); setEditMember(null); }}
+        />
+      )}
+
+      {confirmDeactivate && (
+        <ConfirmModal
+          title="Deactivate member?"
+          message={`${confirmDeactivate.full_name} will lose access to their account until reactivated. You can renew their membership later.`}
+          confirmLabel="Deactivate"
+          danger
+          onConfirm={() => performDeactivate(confirmDeactivate.id)}
+          onClose={() => setConfirmDeactivate(null)}
+        />
+      )}
     </>
   );
 }
 
-function MemberFormModal({ onSave, onClose }) {
-  const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
+function MemberFormModal({ member, onSave, onClose }) {
+  const isEdit = !!member;
+  const [email, setEmail] = useState(member?.email || '');
+  const [fullName, setFullName] = useState(member?.full_name || '');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('member');
+  const [role, setRole] = useState(member?.role || 'member');
+  const [status, setStatus] = useState(member?.membership_status || 'active');
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave({ email, full_name: fullName, password, role });
+    if (isEdit) {
+      onSave({ email, full_name: fullName, role, membership_status: status });
+    } else {
+      onSave({ email, full_name: fullName, password, role });
+    }
   }
 
   const req = <span style={{ color: '#dc2626', marginLeft: '2px' }} aria-hidden="true">*</span>;
@@ -966,7 +1049,7 @@ function MemberFormModal({ onSave, onClose }) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-1)' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 'var(--fs-xl)', color: 'var(--color-espresso)' }}>Add New Member</h2>
+            <h2 style={{ margin: 0, fontSize: 'var(--fs-xl)', color: 'var(--color-espresso)' }}>{isEdit ? 'Edit Member' : 'Add New Member'}</h2>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--fs-xs)', color: 'var(--color-charcoal-light)' }}>
               Fields marked <span style={{ color: '#dc2626' }}>*</span> are required
             </p>
@@ -1019,23 +1102,41 @@ function MemberFormModal({ onSave, onClose }) {
             />
           </div>
 
-          {/* Password + Role row */}
+          {/* Password / Status + Role row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label htmlFor="mem-pass" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
-                Password{req}
-              </label>
-              <input
-                id="mem-pass"
-                type="password"
-                className="input"
-                placeholder="Min. 4 characters"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={4}
-              />
-            </div>
+            {isEdit ? (
+              <div className="form-group" style={{ margin: 0 }}>
+                <label htmlFor="mem-status" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+                  Status{req}
+                </label>
+                <CustomBarDropdown
+                  value={status}
+                  onChange={setStatus}
+                  options={[
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' }
+                  ]}
+                  showFunnel={false}
+                  fullWidth={true}
+                />
+              </div>
+            ) : (
+              <div className="form-group" style={{ margin: 0 }}>
+                <label htmlFor="mem-pass" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
+                  Password{req}
+                </label>
+                <input
+                  id="mem-pass"
+                  type="password"
+                  className="input"
+                  placeholder="Min. 4 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={4}
+                />
+              </div>
+            )}
             <div className="form-group" style={{ flex: '1 1 140px' }}>
               <label htmlFor="mem-role" className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: 'var(--space-2)', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-espresso)' }}>
                 Role{req}
@@ -1059,7 +1160,7 @@ function MemberFormModal({ onSave, onClose }) {
           {/* Actions */}
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Create member</button>
+            <button type="submit" className="btn btn-primary">{isEdit ? 'Save changes' : 'Create member'}</button>
           </div>
         </form>
       </div>
@@ -1337,19 +1438,27 @@ function IssueBookModal({ books, members, issueBookId, setIssueBookId, issueUser
   );
 }
 
-function CategoryFormModal({ newName, setNewName, onSubmit, onClose }) {
+function CategoryFormModal({ category, onSave, onClose }) {
+  const isEdit = !!category;
+  const [name, setName] = useState(category?.name || '');
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    onSave(name);
+  }
+
   return (
     <div className={styles['modal-overlay']} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <h2>Add New Category</h2>
-        <form className={styles['modal-form']} onSubmit={onSubmit}>
+        <h2>{isEdit ? 'Edit Category' : 'Add New Category'}</h2>
+        <form className={styles['modal-form']} onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="modal-cat-name" className="form-label">Category Name</label>
-            <input id="modal-cat-name" className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Science Fiction…" required autoFocus />
+            <input id="modal-cat-name" className="input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Science Fiction…" required autoFocus />
           </div>
           <div className={styles['modal-actions']}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Add category</button>
+            <button type="submit" className="btn btn-primary">{isEdit ? 'Save changes' : 'Add category'}</button>
           </div>
         </form>
       </div>
@@ -1364,10 +1473,11 @@ function CategoriesTab({ isAdmin }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
-  const [newName, setNewName] = useState('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('az_name');
   const [showForm, setShowForm] = useState(false);
+  const [editCategory, setEditCategory] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => { loadCats(); }, []);
 
@@ -1405,32 +1515,25 @@ function CategoriesTab({ isAdmin }) {
     setLoading(false);
   }
 
-  async function handleCreate(e) {
-    e.preventDefault();
-    if (!newName.trim()) return;
+  async function handleSaveCategory(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
     try {
-      await api.post('/categories', { name: newName.trim() });
-      setMsg({ type: 'success', text: 'Category created!' });
-      setNewName(''); setShowForm(false); loadCats();
-    } catch (err) { setMsg({ type: 'error', text: err.message }); }
+      if (editCategory) {
+        await api.put(`/categories/${editCategory.id}`, { name: trimmed });
+        setMsg({ type: 'success', text: 'Category updated!' });
+      } else {
+        await api.post('/categories', { name: trimmed });
+        setMsg({ type: 'success', text: 'Category created!' });
+      }
+      setShowForm(false); setEditCategory(null); loadCats();
+    } catch (err) { setMsg({ type: 'error', text: err.message || 'Failed to save category.' }); }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this category?')) return;
+  async function performDeleteCategory(id) {
+    setConfirmDelete(null);
     try { await api.delete(`/categories/${id}`); setMsg({ type: 'success', text: 'Category deleted.' }); loadCats(); }
     catch (err) { setMsg({ type: 'error', text: err.message }); }
-  }
-
-  async function handleEdit(c) {
-    const updated = prompt('Enter new category name:', c.name);
-    if (!updated || !updated.trim() || updated.trim() === c.name) return;
-    try {
-      await api.put(`/categories/${c.id}`, { name: updated.trim() });
-      setMsg({ type: 'success', text: 'Category updated!' });
-      loadCats();
-    } catch (err) {
-      setMsg({ type: 'error', text: err.message || 'Failed to update category.' });
-    }
   }
 
   if (loading) return <div className={styles['empty-state']}><p>Loading…</p></div>;
@@ -1477,7 +1580,7 @@ function CategoriesTab({ isAdmin }) {
           { value: 'books_low', label: 'Fewest Books' },
         ]}
       >
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add category</button>
+        <button className="btn btn-primary btn-sm" onClick={() => { setEditCategory(null); setShowForm(true); }}>+ Add category</button>
       </CSVToolbar>
 
       <h3 style={{ marginBottom: 'var(--space-4)' }}>Book Categories ({displayedCategories.length})</h3>
@@ -1489,14 +1592,14 @@ function CategoriesTab({ isAdmin }) {
           { key: 'book_count', header: 'Books', render: c => c.book_count || 0 },
           { key: 'actions', header: 'Actions', render: c => (
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-              <button className={styles['icon-btn']} onClick={() => handleEdit(c)} title="Edit category" aria-label="Edit category">
+              <button className={styles['icon-btn']} onClick={() => { setEditCategory(c); setShowForm(true); }} title="Edit category" aria-label="Edit category">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
               {isAdmin && (
-                <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => handleDelete(c.id)} title="Delete category" aria-label="Delete category">
+                <button className={`${styles['icon-btn']} ${styles['icon-btn-danger']}`} onClick={() => setConfirmDelete(c)} title="Delete category" aria-label="Delete category">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -1512,10 +1615,20 @@ function CategoriesTab({ isAdmin }) {
 
       {showForm && (
         <CategoryFormModal
-          newName={newName}
-          setNewName={setNewName}
-          onSubmit={handleCreate}
-          onClose={() => setShowForm(false)}
+          category={editCategory}
+          onSave={handleSaveCategory}
+          onClose={() => { setShowForm(false); setEditCategory(null); }}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmModal
+          title="Delete category?"
+          message={`"${confirmDelete.name}" will be removed.${confirmDelete.book_count ? ` It currently has ${confirmDelete.book_count} book(s).` : ''} This action cannot be undone.`}
+          confirmLabel="Delete category"
+          danger
+          onConfirm={() => performDeleteCategory(confirmDelete.id)}
+          onClose={() => setConfirmDelete(null)}
         />
       )}
     </>
@@ -1892,7 +2005,7 @@ function FinesTab() {
                       </button>
                     )}
                     <button className="btn btn-primary btn-sm" onClick={() => handlePayFine(f.id)}>
-                      Pay
+                      Mark as Paid
                     </button>
                   </div>
                 </td>

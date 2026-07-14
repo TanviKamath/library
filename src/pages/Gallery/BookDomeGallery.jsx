@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../api/client';
 import DomeGallery from '../../components/DomeGallery';
 import { getProxiedImageUrl } from '../../utils/image';
+import { useAuth } from '../../context/AuthContext';
 
 const FALLBACK_COVERS = [
   { src: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=774&auto=format&fit=crop', alt: 'The Secret History' },
@@ -17,6 +18,7 @@ const FALLBACK_COVERS = [
 
 export default function BookDomeGallery() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [images, setImages] = useState(FALLBACK_COVERS);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +63,12 @@ export default function BookDomeGallery() {
           </svg>
           <span className="dome-back-label">Back</span>
         </button>
+
+        {isAuthenticated ? (
+          <Link to="/app/dashboard" className="dome-nav-link">Dashboard</Link>
+        ) : (
+          <Link to="/register" className="dome-nav-link">Sign In / Sign Up</Link>
+        )}
       </div>
 
       <div className="dome-titlebar">
